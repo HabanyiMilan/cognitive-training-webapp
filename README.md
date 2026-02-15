@@ -21,8 +21,8 @@ Cognitive performance web application designed to improve and analyze users' cog
 
 ## Core Features
 - User authentication
+- Lifestyle Assessment Module (sleep, stress, physical activity, screen time)
 - Task selection dashboard
-- Time-based cognitive exercises
-- Real-time score calculation
+- Time-based cognitive exercises with real-time score calculation
 - Performance analytics dashboard
 - AI-generated textual feedback

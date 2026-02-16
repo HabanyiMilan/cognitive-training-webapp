@@ -1,11 +1,18 @@
+import { useEffect, useState } from "react";
+
 function Home() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   return (
-     <div className="home-container">
-      <h1>Cognitive Training</h1>
-      <p className="subtitle">
-        Train memory, attention and problem solving.
-      </p>
-      <button className="login-btn">Login with Google</button>
+    <div className="home-container">
+      <h1>Welcome back{user ? `, ${user.name}` : ""}</h1>
     </div>
   );
 }

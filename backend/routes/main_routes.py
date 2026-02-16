@@ -2,6 +2,6 @@ from flask import Blueprint, jsonify
 
 bp = Blueprint("main", __name__)
 
-@bp.route("/")
+@bp.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Cognitive Training API running"})

@@ -15,16 +15,18 @@ def create_app():
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    CORS(app, supports_credentials=True)
+    CORS(app, origins=["http://127.0.0.1:5173"], supports_credentials=True)
 
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from models import user
+    import models
 
     # Route-ok regisztrálása
     from routes import main_routes
     app.register_blueprint(main_routes.bp)
+    from routes import auth_routes
+    app.register_blueprint(auth_routes.bp)
 
     return app
 

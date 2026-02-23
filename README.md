@@ -26,3 +26,9 @@ Cognitive performance web application designed to improve and analyze users' cog
 - Time-based cognitive exercises with real-time score calculation
 - Performance analytics dashboard
 - AI-generated textual feedback
+
+## Sources
+- Similar website(Lumosity): https://app.lumosity.com/
+- Similar website(Human Benchmark): https://humanbenchmark.com/
+- Memory Game in python: https://www.youtube.com/watch?v=b5EuZrWUZAw
+- Documentation: https://www.simplypsychology.org/working-memory.html

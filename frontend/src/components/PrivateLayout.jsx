@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 
 function PrivateLayout({ children }) {
   const navigate = useNavigate();
@@ -10,33 +10,36 @@ function PrivateLayout({ children }) {
   };
 
   return (
-    <div>
-      <nav style={{ 
-        width: "100%",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          backgroundColor: "#111",
-          padding: "15px 40px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          boxSizing: "border-box",
-      }}>
-        <div onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
-          Cognitive Training
+    <div className="app-container">
+
+      <aside className="sidebar">
+        <div className="sidebar-top">
+          <img
+            src="/src/assets/icons/Cognitra.png"
+            alt="Logo"
+            className="sidebar-logo"
+            onClick={() => navigate("/dashboard")}
+          />
+
+          <nav className="sidebar-nav">
+            <NavLink to="/dashboard">Home</NavLink>
+            <NavLink to="/tasks">Tasks</NavLink>
+            <NavLink to="/statistics">Statistics</NavLink>
+            <NavLink to="/profile">Profile</NavLink>
+          </nav>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <button onClick={handleLogout}>
+        <div className="sidebar-bottom">
+          <button onClick={handleLogout} className="logout-btn">
             Logout
           </button>
         </div>
-      </nav>
+      </aside>
 
-      <main style={{ padding: "40px" }}>
+      <main className="app-content">
         {children}
       </main>
+
     </div>
   );
 }

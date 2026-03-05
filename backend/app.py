@@ -27,6 +27,8 @@ def create_app():
     app.register_blueprint(main_routes.bp)
     from routes import auth_routes
     app.register_blueprint(auth_routes.bp)
+    from routes import assessment_routes
+    app.register_blueprint(assessment_routes.bp)
 
     return app
 

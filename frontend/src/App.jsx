@@ -2,7 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import PublicLayout from "./components/PublicLayout";
 import PrivateLayout from "./components/PrivateLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
+import Assessment from "./pages/Assessment";
+import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 
 function App() {
@@ -10,16 +11,27 @@ function App() {
       <Routes>
         <Route path="/" element={
           <PublicLayout>
-            <Login />
+            <Home />
           </PublicLayout>
           } />
-        <Route path="/home" element={
+          <Route path="/assessment" element={
+              <PublicLayout>
+                <Assessment />
+              </PublicLayout>
+          } />
+        <Route path="/dashboard" element={
           <ProtectedRoute>
             <PrivateLayout>
-              <Home />
+              <Dashboard />
             </PrivateLayout>
           </ProtectedRoute>
         } />
+        <Route path="*" element={
+          <PublicLayout>
+            <Home />
+          </PublicLayout>
+      } />
+
       </Routes>
   );
 }

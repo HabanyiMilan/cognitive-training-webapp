@@ -32,10 +32,19 @@ def token_required(f):
 
         try:
             token = token.split(" ")[1]
-            jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=["HS256"])
-        except:
+            payload = jwt.decode(
+                token,
+                os.getenv("SECRET_KEY"),
+                algorithms=["HS256"])
+
+            current_user = User.query.get(payload["user_id"])
+
+            if not current_user:
+                return jsonify({"error": "User not found"}), 404
+
+        except Exception:
             return jsonify({"error": "Invalid token"}), 401
 
-        return f(*args, **kwargs)
+        return f(current_user, *args, **kwargs)
 
     return decorated

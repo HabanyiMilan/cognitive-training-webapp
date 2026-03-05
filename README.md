@@ -1,4 +1,4 @@
-# Cognitive Training Web App
+# Cognitra (A Cognitive Training Web App)
 Cognitive performance web application designed to improve and analyze users' cognitive abilities through interactive tasks and statistical evaluation.
 
 ## Project Overview

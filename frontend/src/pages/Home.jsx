@@ -1,10 +1,13 @@
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Toast from "../components/Toast";
+import "../styles/Home.css";
 
 function Home() {
   const navigate = useNavigate();
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -12,6 +15,14 @@ function Home() {
       navigate("/dashboard");
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const logout = localStorage.getItem("logout_success");
+    if (!logout) return;
+
+    setToast(logout);
+    localStorage.removeItem("logout_success");
+  }, []);
 
   const handleLoginSuccess = async (credentialResponse) => {
     try {
@@ -21,6 +32,7 @@ function Home() {
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("login_success",`Signed in successfully.`);
 
       if (response.data.user.has_assessment) {
         navigate("/dashboard");
@@ -31,13 +43,14 @@ function Home() {
       console.error("Login failed:", error);
     }
   };
-
+  
   const handleError = () => {
     console.log("Google Login Failed");
   };
 
   return (
     <div className="home-wrapper">
+      <Toast message={toast} onClose={() => setToast("")} />
       <div className="home-card">
         <img
           src="/src/assets/icons/Cognitra.png"

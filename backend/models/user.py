@@ -10,5 +10,5 @@ class User(db.Model):
     google_id = db.Column(db.String(255), unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    assessments = db.relationship('Assessment', backref='user', lazy=True)
+    assessments = db.relationship('Assessment', backref='user', cascade="all, delete-orphan", lazy=True)
     sessions = db.relationship('Session', backref='user', lazy=True)

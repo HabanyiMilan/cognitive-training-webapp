@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
-  const [status, setStatus] = useState("checking"); // checking | allow | deny | needAssessment
+  const [status, setStatus] = useState("checking");
 
   useEffect(() => {
     if (!token) {

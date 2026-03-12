@@ -1,4 +1,5 @@
 import { useNavigate, NavLink } from "react-router-dom";
+import { HomeIcon, ChartBarIcon, UserCircleIcon, ArrowRightStartOnRectangleIcon, FireIcon } from '@heroicons/react/24/outline';
 
 function PrivateLayout({ children }) {
   const navigate = useNavigate();
@@ -6,6 +7,7 @@ function PrivateLayout({ children }) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.setItem("logout_success", `You have been logged out.`);
     navigate("/");
   };
 
@@ -20,18 +22,17 @@ function PrivateLayout({ children }) {
             className="sidebar-logo"
             onClick={() => navigate("/dashboard")}
           />
-
           <nav className="sidebar-nav">
-            <NavLink to="/dashboard">Home</NavLink>
-            <NavLink to="/tasks">Tasks</NavLink>
-            <NavLink to="/statistics">Statistics</NavLink>
-            <NavLink to="/profile">Profile</NavLink>
+            <NavLink to="/dashboard"><HomeIcon />Home</NavLink>
+            <NavLink to="/games"><FireIcon />Games</NavLink>
+            <NavLink to="/statistics"><ChartBarIcon />Statistics</NavLink>
+            <NavLink to="/profile"><UserCircleIcon />Profile</NavLink>
           </nav>
         </div>
 
         <div className="sidebar-bottom">
           <button onClick={handleLogout} className="logout-btn">
-            Logout
+           <ArrowRightStartOnRectangleIcon /> Logout
           </button>
         </div>
       </aside>

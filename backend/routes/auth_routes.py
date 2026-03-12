@@ -6,6 +6,7 @@ from models.assessment import Assessment
 import os
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
+
 @bp.route("/google", methods=["POST"])
 def google_auth():
     data = request.get_json()
@@ -70,25 +71,8 @@ def fitbit_login():
 
     return redirect(url)
 
-
-@bp.route("/me", methods=["GET"])
-@token_required
-def me(current_user):
-    has_assessment = (
-        Assessment.query
-        .filter_by(user_id=current_user.id)
-        .first() is not None
-    )
-    return jsonify({
-        "id": current_user.id,
-        "name": current_user.name,
-        "email": current_user.email,
-        "profile_picture": current_user.profile_picture,
-        "has_assessment": has_assessment,
-    })
-
 import requests
-from services.assessment_service import create_fitbit_assessment
+from services.assessment_service import create_or_update_fitbit_assessment
 @bp.route("/fitbit/callback", methods=["GET"])
 def fitbit_callback():
 
@@ -108,6 +92,23 @@ def fitbit_callback():
 
     tokens = token_response.json()
     access_token = tokens["access_token"]
-    create_fitbit_assessment(user_id, access_token)
+    create_or_update_fitbit_assessment(user_id, access_token)
 
     return redirect("http://127.0.0.1:5173/dashboard")
+
+
+@bp.route("/me", methods=["GET"])
+@token_required
+def me(current_user):
+    has_assessment = (
+        Assessment.query
+        .filter_by(user_id=current_user.id)
+        .first() is not None
+    )
+    return jsonify({
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "profile_picture": current_user.profile_picture,
+        "has_assessment": has_assessment,
+    })

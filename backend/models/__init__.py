@@ -1,4 +1,4 @@
 from .user import User
-from .task import Task
+from .game import Game
 from .session import Session
 from .assessment import Assessment

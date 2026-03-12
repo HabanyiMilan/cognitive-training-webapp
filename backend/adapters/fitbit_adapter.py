@@ -13,14 +13,9 @@ class FitbitAdapter(HealthDataAdapter):
         }
         today = datetime.utcnow().strftime("%Y-%m-%d")
 
-        sleep = requests.get(
-            f"https://api.fitbit.com/1.2/user/-/sleep/date/{today}.json",
-            headers=headers
-        ).json()
-        activity = requests.get(
-            f"https://api.fitbit.com/1/user/-/activities/date/{today}.json",
-            headers=headers
-        ).json()
+        sleep = requests.get(f"https://api.fitbit.com/1.2/user/-/sleep/date/{today}.json",headers=headers).json()
+        activity = requests.get(f"https://api.fitbit.com/1/user/-/activities/date/{today}.json",headers=headers).json()
+        
         for payload, name in [(sleep, "Sleep"), (activity, "Activity")]:
             if isinstance(payload, dict) and payload.get("errors"):
                 raise ValueError(f"Fitbit {name} error: {payload['errors']}")

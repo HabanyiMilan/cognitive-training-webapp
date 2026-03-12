@@ -6,8 +6,8 @@ class AbilityType(enum.Enum):
     ATTENTION = "attention"
     PROBLEM_SOLVING = "problem_solving"
 
-class Task(db.Model):
-    __tablename__ = 'tasks'
+class Game(db.Model):
+    __tablename__ = 'games'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)

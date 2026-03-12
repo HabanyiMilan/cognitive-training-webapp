@@ -1,18 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../components/Assessment.css";
+import "../styles/Assessment.css";
 import axios from "axios";
+import Toast from "@/components/Toast.jsx";
 
 export default function Assessment() {
   const navigate = useNavigate();
   const [step, setStep] = useState("method");
+  const [importing, setImporting] = useState(false);
   const handleFitbitStart = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user?.id) {
-      console.error("No user in localStorage; cannot start Fitbit auth.");
+      setToast("Please sign in before importing from Fitbit.");
       return;
     }
-    window.location.href = `http://127.0.0.1:5000/auth/fitbit/login?user_id=${user.id}`;
+    setImporting(true);
+    setToast("Opening Fitbit to import your data…");
+    setTimeout(() => {
+      window.location.href = `http://127.0.0.1:5000/auth/fitbit/login?user_id=${user.id}`;
+    }, 120);
+    localStorage.setItem("assessment_success", "Assessment saved successfully.");
   };
 
   const questions = [
@@ -45,11 +52,11 @@ export default function Assessment() {
     },
     {
       key: "stress_level",
-      question: "What is your stress level?",
+      question: "How stressful do you find your daily life?",
       options: [
-        { value: 0, label: "Low" },
-        { value: 1, label: "Medium" },
-        { value: 2, label: "High" }
+        { value: 0, label: "Not stressful" },,
+        { value: 1, label: "Moderately stressful" },
+        { value: 2, label: "Highly stressful" }
       ]
     },
     {
@@ -66,6 +73,13 @@ export default function Assessment() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
+
+  const loginMsg = localStorage.getItem("login_success");
+    if (loginMsg) {
+      setToast(loginMsg);
+      localStorage.removeItem("login_success");
+    }
 
   const handleSelect = (value) => {
     setFormData({
@@ -81,9 +95,11 @@ export default function Assessment() {
   };
 
   const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+    if (currentStep === 0) {
+      setStep("method");
+      return;
     }
+    setCurrentStep(currentStep - 1);
   };
 
   const handleSubmit = async () => {
@@ -107,6 +123,7 @@ export default function Assessment() {
           has_assessment: true
         })
         );
+        localStorage.setItem("assessment_success", "Assessment saved successfully.");
         navigate("/dashboard");
       } else {
         alert("Something went wrong");
@@ -118,10 +135,10 @@ export default function Assessment() {
   };
 
   const progress = ((currentStep + 1) / questions.length) * 100;
-  const user = JSON.parse(localStorage.getItem("user"));
 
   return (
     <div className="home-wrapper">
+      <Toast message={toast} onClose={() => setToast("")} />
       <div className="home-card">
         <img
           src="/src/assets/icons/Cognitra.png"
@@ -132,21 +149,25 @@ export default function Assessment() {
         <div className="assessment-title">
           <h2>Choose Assessment Method</h2>
           
-          <div className="method-buttons">
-            <button className="primary-btn" onClick={() => setStep("manual")}>
-              Fill Manually
-            </button>
-            <button
-              className="primary-btn"
-              onClick={handleFitbitStart}
-            >
-              Import from Fitbit
-            </button>
-          </div>
+          {importing ? (
+            <div className="import-loading">
+              <div className="spinner" aria-label="Loading" />
+              <p className="import-text">Connecting to Fitbit</p>
+            </div>
+          ) : (
+            <div className="method-buttons">
+              <button className="primary-btn" onClick={() => setStep("manual")}>
+                Fill Manually
+              </button>
+              <button className="primary-btn" onClick={handleFitbitStart}>
+                Import Fitbit
+              </button>
+            </div>
+          )}
           <div className="assessment-text">
             Before you start, we need to gather some information about your lifestyle and habits.
             With the information we can give you feedback on your cognitive health and help you to improve it.
-            Please choose one of the following methods to provide this information:
+            Please choose one of the following methods to provide this information.
           </div>
         </div>
       )}
@@ -159,7 +180,7 @@ export default function Assessment() {
               style={{ width: `${progress}%` }}
             />
           </div>
-          <h2 className="assessment-title">{questions[currentStep].question}</h2>
+          <h1 className="assessment-title">{questions[currentStep].question}</h1>
           <div className="answers">
             {questions[currentStep].options.map(option => (
               <button
@@ -173,7 +194,7 @@ export default function Assessment() {
             ))}
           </div>
           <div className="navigation-buttons">
-            <button onClick={prevStep} disabled={currentStep === 0} className="nav-btn secondary">
+            <button onClick={prevStep} className="nav-btn secondary">
               Back
             </button>
             {currentStep === questions.length - 1 ? (

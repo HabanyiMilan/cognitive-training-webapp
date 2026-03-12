@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Assessment from "./pages/Assessment";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -23,6 +24,13 @@ function App() {
           <ProtectedRoute>
             <PrivateLayout>
               <Dashboard />
+            </PrivateLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <PrivateLayout>
+              <Profile />
             </PrivateLayout>
           </ProtectedRoute>
         } />

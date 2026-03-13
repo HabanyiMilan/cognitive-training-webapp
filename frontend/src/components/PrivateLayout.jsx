@@ -19,10 +19,10 @@ function PrivateLayout({ children }) {
             src="/src/assets/icons/Cognitra.png"
             alt="Logo"
             className="sidebar-logo"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/home")}
           />
           <nav className="sidebar-nav">
-            <NavLink to="/dashboard"><HomeIcon />Home</NavLink>
+            <NavLink to="/home"><HomeIcon />Home</NavLink>
             <NavLink to="/games"><Gamepad2Icon />Games</NavLink>
             <NavLink to="/statistics"><ChartSplineIcon />Statistics</NavLink>
             <NavLink to="/profile"><UserRoundIcon />Profile</NavLink>

@@ -26,7 +26,6 @@ class FitbitAdapter(HealthDataAdapter):
         very_active = activity.get("summary", {}).get("veryActiveMinutes", 0)
         fairly_active = activity.get("summary", {}).get("fairlyActiveMinutes", 0)
 
-        # Weighted active minutes to approximate intensity; normalized to 0–2
         activity_score = very_active * 2 + fairly_active
         if activity_score >= 60 or steps >= 10000:
             activity_level = 2
@@ -44,9 +43,9 @@ class FitbitAdapter(HealthDataAdapter):
             if isinstance(payload, dict) and payload.get("errors"):
                 raise ValueError(f"Fitbit {name} error: {payload['errors']}")
             
-        caffeine_per_day = 0  # Fitbit API does not provide caffeine intake data
-        daily_screen_time = 0  # Fitbit API does not provide screen time data
-        concentration_level = 0 # Fitbit API does not provide concentration level data
+        caffeine_per_day = 0  # Fitbit API does not provide data
+        daily_screen_time = 0  # Fitbit API does not provide data
+        concentration_level = 0 # Fitbit API does not provide data
 
         return HealthData(
             sleep_hours=sleep_hours,

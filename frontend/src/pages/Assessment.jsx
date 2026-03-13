@@ -133,7 +133,7 @@ export default function Assessment() {
         })
         );
         localStorage.setItem("assessment_success", "Assessment saved successfully.");
-        navigate("/dashboard");
+        navigate("/home");
       } else {
         alert("Something went wrong");
       }

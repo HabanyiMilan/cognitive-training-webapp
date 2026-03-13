@@ -3,8 +3,8 @@ import PublicLayout from "./components/PublicLayout";
 import PrivateLayout from "./components/PrivateLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Assessment from "./pages/Assessment";
-import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import LandingPage from "./pages/LandingPage";
 import Profile from "./pages/Profile";
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={
           <PublicLayout>
-            <Home />
+            <LandingPage />
           </PublicLayout>
           } />
           <Route path="/assessment" element={
@@ -20,10 +20,10 @@ function App() {
                 <Assessment />
               </PublicLayout>
           } />
-        <Route path="/dashboard" element={
+        <Route path="/home" element={
           <ProtectedRoute>
             <PrivateLayout>
-              <Dashboard />
+              <Home />
             </PrivateLayout>
           </ProtectedRoute>
         } />
@@ -36,7 +36,7 @@ function App() {
         } />
         <Route path="*" element={
           <PublicLayout>
-            <Home />
+            <LandingPage />
           </PublicLayout>
       } />
 

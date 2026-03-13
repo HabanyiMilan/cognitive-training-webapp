@@ -1,84 +1,80 @@
-import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Toast from "../components/Toast";
+import SplitText from "@/components/SplitText.jsx";
+import Toast from "@/components/Toast.jsx";
+import FloatingLines from "@/components/FloatingLines";
 import "../styles/Home.css";
 
 function Home() {
-  const navigate = useNavigate();
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
   const [toast, setToast] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/dashboard");
+    const syncUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("http://127.0.0.1:5000/auth/me", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        if (res.ok) {
+          const fresh = await res.json();
+          localStorage.setItem("user", JSON.stringify(fresh));
+          setUser(fresh);
+        }
+      } catch (err) {
+        console.error("Failed to sync user", err);
+      }
+    };
+    const loginMsg = localStorage.getItem("login_success");
+    if (loginMsg) {
+      setToast(loginMsg);
+      localStorage.removeItem("login_success");
     }
-  }, [navigate]);
 
-  useEffect(() => {
-    const logout = localStorage.getItem("logout_success");
-    if (!logout) return;
+    const saved = localStorage.getItem("assessment_success");
+    if (saved) {
+      setToast(saved);
+      localStorage.removeItem("assessment_success");
+    }
 
-    setToast(logout);
-    localStorage.removeItem("logout_success");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("assessment") === "fitbit_success") {
+      setToast("Fitbit assessment imported successfully.");
+      params.delete("assessment");
+      const newUrl =
+        window.location.pathname +
+     (params.toString() ? `?${params.toString()}` : "") +
+        window.location.hash;
+      window.history.replaceState({}, "", newUrl);
+    }
+
+    syncUser();
   }, []);
 
-  const handleLoginSuccess = async (credentialResponse) => {
-    try {
-      const response = await axios.post("http://127.0.0.1:5000/auth/google", {
-        token: credentialResponse.credential,
-      });
-
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("login_success",`Signed in successfully.`);
-
-      if (response.data.user.has_assessment) {
-        navigate("/dashboard");
-      } else {
-        navigate("/assessment");
-      }
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
-  };
-  
-  const handleError = () => {
-    console.log("Google Login Failed");
-  };
-
   return (
-    <div className="home-wrapper">
-      <Toast message={toast} onClose={() => setToast("")} />
-      <div className="home-card">
-        <img
-          src="/src/assets/icons/Cognitra.png"
-          alt="Cognitra Logo"
-          className="home-logo"
-        />
-        <div className="login-container">
-          <GoogleLogin
-            onSuccess={handleLoginSuccess}
-            onError={handleError}
-            logo_alignment="center"
-            shape="pill"
-            locale="en"
-          />
-        </div>
-        <div className="home-text">
-          <p>
-            Cognitive abilities such as memory, attention, and problem-solving play a fundamental role
-            in everyday performance and long-term development. 
-            These mental processes determine how we process information, how quickly we react, 
-            and how effectively we make decisions.
-          </p>
-
-          <p>
-            Cognitra is designed to enhance memory, attention, and problem-solving skills through structured tasks,
-            while providing detailed statistical analysis to help you gain clear insight into your progress
-            and achieve better results.
-          </p>
+    <div className="wallpaper-wrapper">
+      <div className="wallpaper-bg">
+        <FloatingLines enabledWaves={["top", "middle", "bottom"]} lineCount={5} lineDistance={5} bendRadius={5} bendStrength={-0.5} interactive parallax/>
+      </div>
+      <div className="wallpaper-content text-white">
+        <Toast message={toast} onClose={() => setToast("")} />
+        <div className="home-hero">
+          <div className="home-content">
+            <SplitText
+              text={`Welcome back${user ? `, ${user.name}` : ""}`}
+              className="home-title"
+              delay={50}
+              duration={1.25}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 0, y: 40 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="-100px"
+              textAlign="center"
+              showCallback
+            />
+          </div>
         </div>
       </div>
     </div>

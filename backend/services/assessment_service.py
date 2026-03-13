@@ -8,14 +8,25 @@ def map_sleep(hours):
         return 1
     else:
         return 2
+    
+def estimate_stress(avg_hrv, sleep_hours):
+    score = 0
+    if avg_hrv < 30:
+        score += 2
+    elif avg_hrv < 40:
+        score += 1
 
-def map_activity(steps):
-    if steps < 4000:
-        return 0
-    elif steps <= 10000:
+    if sleep_hours < 6:
+        score += 2
+    elif sleep_hours < 7:
+        score += 1
+
+    if score >= 3:
+        return 2
+    elif score >= 1:
         return 1
     else:
-        return 2
+        return 0
 
 def create_manual_assessment(user_id, data):
     assessment = Assessment(
@@ -25,6 +36,7 @@ def create_manual_assessment(user_id, data):
         daily_screen_time=int(data.get("daily_screen_time")),
         stress_level=int(data.get("stress_level")),
         physical_activity=int(data.get("physical_activity")),
+        concentration_level=int(data.get("concentration_level")),
         source="manual",
     )
 
@@ -43,6 +55,7 @@ def update_manual_assessment(assessment_id, user_id, data):
     assessment.daily_screen_time = int(data.get("daily_screen_time", assessment.daily_screen_time))
     assessment.stress_level = int(data.get("stress_level", assessment.stress_level))
     assessment.physical_activity = int(data.get("physical_activity", assessment.physical_activity))
+    assessment.concentration_level = int(data.get("concentration_level", assessment.concentration_level))
     assessment.source = "manual"
 
     db.session.commit()
@@ -53,7 +66,8 @@ def create_or_update_fitbit_assessment(user_id, access_token):
     adapter = FitbitAdapter(access_token)
     health_data = adapter.get_health_data(None)
     sleep_category = map_sleep(health_data.sleep_hours)
-    activity_category = map_activity(health_data.physical_activity)
+    activity_category = int(health_data.physical_activity or 0)
+    stress = estimate_stress(health_data.avg_hrv, health_data.sleep_hours)
 
     assessment = (
         Assessment.query.filter_by(user_id=user_id)
@@ -67,9 +81,10 @@ def create_or_update_fitbit_assessment(user_id, access_token):
 
     assessment.sleep_hours = sleep_category
     assessment.physical_activity = activity_category
+    assessment.stress_level = stress
     assessment.caffeine_per_day = 0  # Fitbit API does not provide caffeine intake data
     assessment.daily_screen_time = 0  # Fitbit API does not provide screen time data
-    assessment.stress_level = 0  # Fitbit API does not provide stress level data
+    assessment.concentration_level = 0 # Fitbit API does not provide concentration level data
     assessment.source = "fitbit"
 
     db.session.commit()

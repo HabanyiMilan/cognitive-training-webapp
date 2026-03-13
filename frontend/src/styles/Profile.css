@@ -100,6 +100,87 @@
   overflow: hidden;
 }
 
+.assessment-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap:16px;
+}
+
+.assessment-card-item{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:20px 18px;
+  border-radius:14px;
+  background: linear-gradient(135deg, rgba(33,58,98,0.9), rgba(18,31,53,0.9));
+  border:1px solid rgba(148, 163, 184, 0.14);
+  box-shadow:0 12px 26px rgba(0,0,0,0.28);
+}
+
+.assessment-card-item__icon{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  font-size:24px;
+  background:rgba(255,255,255,0.05);
+}
+
+.assessment-card-item__content{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1;
+}
+
+.assessment-card-item__label{
+  margin:0;
+  color:#e2e8f0;
+  font-size:17px;
+  font-weight:600;
+}
+
+.assessment-card-item__value-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding-right:46px;
+}
+
+.assessment-card-item__value-dot{
+  width:14px;
+  height:14px;
+  border-radius:999px;
+  background:#38bdf8;
+  box-shadow:0 0 0 6px rgba(56,189,248,0.12);
+  position:absolute;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+}
+
+.assessment-card-item__value{
+  color:#cbd5e1;
+  font-size:16px;
+  font-weight:600;
+  margin-right:auto;
+}
+
+@media (max-width: 900px){
+  .assessment-grid{
+    grid-template-columns: 1fr;
+  }
+  .assessment-card-item--single{
+    width:100%;
+    max-width:none;
+    grid-column:auto;
+  }
+}
+
 .assessment-row{
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -132,7 +213,6 @@
   justify-content:center;
   gap:14px;
   flex-wrap:wrap;
-  
   min-width:150px;
   padding:12px 18px;
   border-radius:12px;
@@ -181,6 +261,12 @@
   background:linear-gradient(135deg,#4c8ffc,#74adff);
   box-shadow:0 14px 30px rgba(88,149,255,0.22);
   border-color: rgba(37, 161, 243, 0.877);
+}
+.ghost-btn:disabled{
+  opacity:0.55;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow:none;
 }
 
 .profile-banner{

@@ -54,15 +54,7 @@ function Dashboard() {
   return (
     <div className="wallpaper-wrapper">
       <div className="wallpaper-bg">
-        <FloatingLines
-          enabledWaves={["top", "middle", "bottom"]}
-          lineCount={5}
-          lineDistance={5}
-          bendRadius={5}
-          bendStrength={-0.5}
-          interactive
-          parallax
-        />
+        <FloatingLines enabledWaves={["top", "middle", "bottom"]} lineCount={5} lineDistance={5} bendRadius={5} bendStrength={-0.5} interactive parallax/>
       </div>
       <div className="wallpaper-content text-white">
         <Toast message={toast} onClose={() => setToast("")} />

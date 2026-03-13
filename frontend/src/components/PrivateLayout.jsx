@@ -1,6 +1,5 @@
 import { useNavigate, NavLink } from "react-router-dom";
-import { HomeIcon, ChartBarIcon, UserCircleIcon, ArrowRightStartOnRectangleIcon, FireIcon } from '@heroicons/react/24/outline';
-
+import {HomeIcon, LogOutIcon, UserRoundIcon, ChartSplineIcon, Gamepad2Icon} from "lucide-react";
 function PrivateLayout({ children }) {
   const navigate = useNavigate();
 
@@ -24,15 +23,15 @@ function PrivateLayout({ children }) {
           />
           <nav className="sidebar-nav">
             <NavLink to="/dashboard"><HomeIcon />Home</NavLink>
-            <NavLink to="/games"><FireIcon />Games</NavLink>
-            <NavLink to="/statistics"><ChartBarIcon />Statistics</NavLink>
-            <NavLink to="/profile"><UserCircleIcon />Profile</NavLink>
+            <NavLink to="/games"><Gamepad2Icon />Games</NavLink>
+            <NavLink to="/statistics"><ChartSplineIcon />Statistics</NavLink>
+            <NavLink to="/profile"><UserRoundIcon />Profile</NavLink>
           </nav>
         </div>
 
         <div className="sidebar-bottom">
           <button onClick={handleLogout} className="logout-btn">
-           <ArrowRightStartOnRectangleIcon /> Logout
+           <LogOutIcon /> Logout
           </button>
         </div>
       </aside>

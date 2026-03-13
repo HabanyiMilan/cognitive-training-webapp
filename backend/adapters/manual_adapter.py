@@ -8,5 +8,6 @@ class ManualAdapter(HealthDataAdapter):
             caffeine_per_day=data.get("caffeine_per_day"),
             daily_screen_time=data.get("daily_screen_time"),
             stress_level=data.get("stress_level"),
-            physical_activity=data.get("physical_activity")
+            physical_activity=data.get("physical_activity"),
+            concentration_level=data.get("concentration_level")
         )

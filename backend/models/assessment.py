@@ -9,6 +9,7 @@ class Assessment(db.Model):
         daily_screen_time = db.Column(db.Integer, nullable=True)
         stress_level = db.Column(db.Integer, nullable=True)
         physical_activity = db.Column(db.Integer, nullable=True)
+        concentration_level = db.Column(db.Integer, nullable=True)
         source = db.Column(db.String(255), nullable=True)
 
         SLEEP_OPTIONS = {
@@ -55,3 +56,12 @@ class Assessment(db.Model):
         @property
         def physical_activity_display(self):
             return self.PHYSICAL_ACTIVITY_OPTIONS.get(self.physical_activity, "Unknown")
+        
+        CONCENTRATION_LEVEL_OPTIONS = {
+             0: "Rarely",
+             1: "Sometimes",
+             2: "Regularly"
+        }
+        @property
+        def concentration_level_display(self):
+            return self.CONCENTRATION_LEVEL_OPTIONS.get(self.concentration_level, "Unknown")

@@ -5,7 +5,7 @@ import "../styles/Profile.css";
 import "../styles/Index.css";
 import "../styles/Assessment.css";
 import FloatingLines from '@/components/FloatingLines';
-import {FireIcon, HeartIcon} from '@heroicons/react/24/outline'
+import { Footprints, Activity, Moon, Coffee, Brain, Smartphone, Gamepad2Icon, CrownIcon } from "lucide-react";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -64,6 +64,15 @@ export default function Profile() {
         { value: 1, label: "Sometimes" },
         { value: 2, label: "Regularly" }
       ]
+    },
+    {
+      key: "concentration_level",
+      question: "How often do you do activities that require concentration or thinking?",
+      options: [
+        { value: 0, label: "Rarely" },
+        { value: 1, label: "Sometimes" },
+        { value: 2, label: "Regularly" }
+      ]
     }
   ];
 
@@ -82,7 +91,8 @@ export default function Profile() {
           caffeine_per_day: data.assessment.caffeine_per_day,
           daily_screen_time: data.assessment.daily_screen_time,
           stress_level: data.assessment.stress_level,
-          physical_activity: data.assessment.physical_activity
+          physical_activity: data.assessment.physical_activity,
+          concentration_level: data.assessment.concentration_level
         });
       }
     } catch {
@@ -173,12 +183,12 @@ export default function Profile() {
 
     setDeleting(true);
     try {
-      const res = await fetch("/profile", {
-        method: "DELETE",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token")
-        }
-      });
+    const res = await fetch("http://127.0.0.1:5000/profile", {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token")
+      }
+    });
       if (res.ok) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -199,15 +209,7 @@ export default function Profile() {
 
   const wallpaper = useMemo(() => (
     <div className="wallpaper-bg">
-      <FloatingLines
-        enabledWaves={["top","middle","bottom"]}
-        lineCount={5}
-        lineDistance={5}
-        bendRadius={5}
-        bendStrength={-0.5}
-        interactive={true}
-        parallax={true}
-      />
+      <FloatingLines enabledWaves={["top","middle","bottom"]} lineCount={5} lineDistance={5} bendRadius={5} bendStrength={-0.5} interactive={true} parallax={true}/>
     </div>
   ), []);
 
@@ -222,6 +224,46 @@ export default function Profile() {
       </div>
     );
   }
+
+  const colorScale = ["#38bdf8", "#fbbf24", "rgba(177, 28, 28, 0.877)"];
+  const assessmentItems = profile.assessment ? [
+    {
+      title: "Physical Activity",
+      value: profile.assessment.activity_label,
+      numeric: profile.assessment.physical_activity,
+      emoji: <Footprints size={24} />
+    },
+    {
+      title: "Sleeping Hours",
+      value: profile.assessment.sleep_label,
+      numeric: profile.assessment.sleep_hours,
+      emoji: <Moon size={24} />
+    },
+    {
+      title: "Daily Caffeine Consumption",
+      value: profile.assessment.caffeine_label,
+      numeric: profile.assessment.caffeine_per_day,
+      emoji: <Coffee size={24} />
+    },
+    {
+      title: "Usual Stress Level",
+      value: profile.assessment.stress_label,
+      numeric: profile.assessment.stress_level,
+      emoji: <Activity size={24} />
+    },
+    {
+      title: "Daily Screen Time",
+      value: profile.assessment.screen_time_label,
+      numeric: profile.assessment.daily_screen_time,
+      emoji: <Smartphone size={24} />
+    },
+    {
+      title: "Concentration Required Activities",
+      value: profile.assessment.concentration_label,
+      numeric: profile.assessment.concentration_level,
+      emoji: <Brain size={24} />
+    }
+  ] : [];
 
   return (
     <div className="wallpaper-wrapper">
@@ -245,7 +287,7 @@ export default function Profile() {
 
               <div className="profile-banner__stats">
                 <div className="stat-card stat-card--blue">
-                  <div className="stat-card__icon"><FireIcon /></div>
+                  <div className="stat-card__icon"><Gamepad2Icon /></div>
                   <div>
                     <p className="stat-card__value">{profile.user.games_played ?? 0}</p>
                     <p className="stat-card__label">Games Played</p>
@@ -253,10 +295,10 @@ export default function Profile() {
                 </div>
 
                 <div className="stat-card stat-card--blue">
-                  <div className="stat-card__icon"><HeartIcon /></div>
+                  <div className="stat-card__icon"><CrownIcon /></div>
                   <div>
                     <p className="stat-card__value">
-                      {profile.user.favorite_game_type || "Unknown"}
+                      {profile.user.favorite_game_type ?? "Unknown"}
                     </p>
                     <p className="stat-card__label">Favorite Game Type</p>
                   </div>
@@ -276,32 +318,24 @@ export default function Profile() {
 
                 {profile.assessment ? (
                   <div className="assessment-body">
-                    <div className="assessment-columns">
-                      <h3>Activities</h3>
-                      <h3>Amount</h3>
-                    </div>
-
-                    <div className="assessment-rows">
-                      <div className="assessment-row">
-                        <div>Physical Activity</div>
-                        <div>{profile.assessment.activity_label}</div>
-                      </div>
-                      <div className="assessment-row">
-                        <div>Sleep</div>
-                        <div>{profile.assessment.sleep_label}</div>
-                      </div>
-                      <div className="assessment-row">
-                        <div>Caffeine</div>
-                        <div>{profile.assessment.caffeine_label}</div>
-                      </div>
-                      <div className="assessment-row">
-                        <div>Stress</div>
-                        <div>{profile.assessment.stress_label}</div>
-                      </div>
-                      <div className="assessment-row last">
-                        <div>Daily Screen Time</div>
-                        <div>{profile.assessment.screen_time_label}</div>
-                      </div>
+                    <div className="assessment-grid">
+                      {assessmentItems.map((item) => {
+                        const accent = colorScale[item.numeric ?? 0];
+                        return (
+                          <div key={item.title} className={`assessment-card-item`}>
+                            <div className="assessment-card-item__icon" style={{ color: accent }}>
+                              {item.emoji}
+                            </div>
+                            <div className="assessment-card-item__content">
+                              <p className="assessment-card-item__label">{item.title}</p>
+                              <div className="assessment-card-item__value-row">
+                                <span className="assessment-card-item__value">{item.value}</span>
+                                <span className="assessment-card-item__value-dot" style={{ background: accent, boxShadow: `0 0 0 6px ${accent}1f` }} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="assessment-footer">
@@ -324,7 +358,7 @@ export default function Profile() {
 
           {step === "method" && (
             <div className="assessment-card">
-              <button className="ghost-btn" onClick={handleCancelEdit}>Cancel</button>
+              <button className="ghost-btn" onClick={handleCancelEdit} disabled={importing}>Cancel</button>
               <div className="assessment-header flex-row">
                 <div>
                   <h2>Choose Assessment Method</h2>

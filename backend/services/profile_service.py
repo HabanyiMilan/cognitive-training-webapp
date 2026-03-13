@@ -18,6 +18,8 @@ def get_assessment(assessment):
         "stress_label": assessment.stress_level_display,
         "physical_activity": assessment.physical_activity,
         "activity_label": assessment.physical_activity_display,
+        "concentration_level": assessment.concentration_level,
+        "concentration_label": assessment.concentration_level_display,
         "source": assessment.source,
     }
 
@@ -35,7 +37,11 @@ def get_profile(user_id):
             "name": user.name,
             "email": user.email,
             "profile_picture": user.profile_picture,
-            "created_at": user.created_at
+            "created_at": user.created_at,
+            "games_played": user.games_played,
+            "favorite_game_type": user.favorite_game_type,
+            "streak": user.streak,
+            "last_played_date": user.last_played_date
         },
         "assessment": get_assessment(latest_assessment),
     }

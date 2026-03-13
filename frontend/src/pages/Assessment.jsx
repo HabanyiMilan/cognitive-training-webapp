@@ -67,6 +67,15 @@ export default function Assessment() {
         { value: 1, label: "Sometimes" },
         { value: 2, label: "Regularly" }
       ]
+    },
+    {
+      key: "concentration_level",
+      question: "How often do you do activities that require concentration or thinking?",
+      options: [
+        { value: 0, label: "Rarely" },
+        { value: 1, label: "Sometimes" },
+        { value: 2, label: "Regularly" }
+      ]
     }
   ];
 

@@ -29,7 +29,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
 }
 
 .sidebar-nav a {
@@ -40,10 +41,12 @@
   transition: 0.2s;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 15px 18px;
   border-radius: 12px;
   line-height: 1.1;
+  width: 100%;
 }
 
 .sidebar-nav a:hover {

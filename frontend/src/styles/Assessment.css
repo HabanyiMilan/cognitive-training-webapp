@@ -1,6 +1,6 @@
 .assessment-title{
   margin-bottom:10px;
-  font-size:32px;
+  font-size:25px;
   color:#cbd5e1;
 }
 
@@ -58,6 +58,7 @@
   background:#1e293b;
   border-radius:5px;
   margin-bottom:30px;
+  width: 100%;
 }
 
 .progress-fill{

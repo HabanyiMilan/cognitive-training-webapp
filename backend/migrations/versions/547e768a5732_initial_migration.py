@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: c815382c68e7
+Revision ID: 547e768a5732
 Revises: 
-Create Date: 2026-03-12 12:25:02.052370
+Create Date: 2026-03-13 15:13:44.722240
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c815382c68e7'
+revision = '547e768a5732'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -34,6 +34,10 @@ def upgrade():
     sa.Column('profile_picture', sa.String(length=255), nullable=True),
     sa.Column('google_id', sa.String(length=255), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('games_played', sa.Integer(), nullable=True),
+    sa.Column('favorite_game_type', sa.Enum('MEMORY', 'ATTENTION', 'PROBLEM_SOLVING', name='abilitytype'), nullable=True),
+    sa.Column('streak', sa.Integer(), nullable=True),
+    sa.Column('last_played_date', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('google_id')
@@ -46,6 +50,7 @@ def upgrade():
     sa.Column('daily_screen_time', sa.Integer(), nullable=True),
     sa.Column('stress_level', sa.Integer(), nullable=True),
     sa.Column('physical_activity', sa.Integer(), nullable=True),
+    sa.Column('concentration_level', sa.Integer(), nullable=True),
     sa.Column('source', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

@@ -37,11 +37,11 @@ def get_profile(user_id):
             "name": user.name,
             "email": user.email,
             "profile_picture": user.profile_picture,
-            "created_at": user.created_at,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
             "games_played": user.games_played,
-            "favorite_game_type": user.favorite_game_type,
+            "favorite_game_type": user.favorite_game_type.value if user.favorite_game_type else None,
             "streak": user.streak,
-            "last_played_date": user.last_played_date
+            "last_played_date": user.last_played_date.isoformat() if user.last_played_date else None
         },
         "assessment": get_assessment(latest_assessment),
     }

@@ -6,6 +6,8 @@ import Assessment from "./pages/Assessment";
 import Home from "./pages/Home";
 import LandingPage from "./pages/LandingPage";
 import Profile from "./pages/Profile";
+import Games from "./pages/Games"
+import CardMatch from "./Games/CardMatch/CardMatch";
 
 function App() {
   return (
@@ -20,20 +22,16 @@ function App() {
                 <Assessment />
               </PublicLayout>
           } />
-        <Route path="/home" element={
+        <Route element={
           <ProtectedRoute>
-            <PrivateLayout>
-              <Home />
-            </PrivateLayout>
+            <PrivateLayout />
           </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <PrivateLayout>
-              <Profile />
-            </PrivateLayout>
-          </ProtectedRoute>
-        } />
+        }>
+          <Route path="home" element={<Home />} />
+          <Route path="games" element={<Games />} />
+          <Route path="games/card-match" element={<CardMatch />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
         <Route path="*" element={
           <PublicLayout>
             <LandingPage />

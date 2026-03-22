@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import SplitText from "@/components/SplitText.jsx";
 import Toast from "@/components/Toast.jsx";
-import FloatingLines from "@/components/FloatingLines";
 import "../styles/Home.css";
 
 function Home() {
@@ -52,29 +51,24 @@ function Home() {
   }, []);
 
   return (
-    <div className="wallpaper-wrapper">
-      <div className="wallpaper-bg">
-        <FloatingLines enabledWaves={["top", "middle", "bottom"]} lineCount={5} lineDistance={5} bendRadius={5} bendStrength={-0.5} interactive parallax/>
-      </div>
-      <div className="wallpaper-content text-white">
-        <Toast message={toast} onClose={() => setToast("")} />
-        <div className="home-hero">
-          <div className="home-content">
-            <SplitText
-              text={`Welcome back${user ? `, ${user.name}` : ""}`}
-              className="home-title"
-              delay={50}
-              duration={1.25}
-              ease="power3.out"
-              splitType="chars"
-              from={{ opacity: 0, y: 40 }}
-              to={{ opacity: 1, y: 0 }}
-              threshold={0.1}
-              rootMargin="-100px"
-              textAlign="center"
-              showCallback
-            />
-          </div>
+    <div className="text-white">
+      <Toast message={toast} onClose={() => setToast("")} />
+      <div className="home-hero">
+        <div className="home-content">
+          <SplitText
+            text={`Welcome back${user ? `, ${user.name}` : ""}`}
+            className="home-title"
+            delay={50}
+            duration={1.25}
+            ease="power3.out"
+            splitType="chars"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.1}
+            rootMargin="-100px"
+            textAlign="center"
+            showCallback
+          />
         </div>
       </div>
     </div>

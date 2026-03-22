@@ -52,11 +52,7 @@ function LandingPage() {
     <div className="home-wrapper">
       <Toast message={toast} onClose={() => setToast("")} />
       <div className="home-card">
-        <img
-          src="/src/assets/icons/Cognitra.png"
-          alt="Cognitra Logo"
-          className="home-logo"
-        />
+        <img src="/src/assets/icons/Cognitra.png" alt="Cognitra Logo" className="home-logo"/>
         <div className="login-container">
           <GoogleLogin
             onSuccess={handleLoginSuccess}

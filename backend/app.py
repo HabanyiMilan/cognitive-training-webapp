@@ -31,6 +31,8 @@ def create_app():
     app.register_blueprint(assessment_routes.bp)
     from routes import profile_routes
     app.register_blueprint(profile_routes.bp)
+    from routes import game_routes
+    app.register_blueprint(game_routes.bp)
 
     return app
 

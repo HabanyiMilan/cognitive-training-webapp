@@ -15,6 +15,33 @@
   backdrop-filter: blur(6px);
 }
 
+.assessment-card .ghost-btn{
+  background: rgba(59,130,246,0.3);
+  color:white;
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  margin-top:12px;
+  margin-left:12px;
+  box-shadow:0 10px 25px rgba(59,130,246,0.18);
+  border:1px solid rgba(37, 161, 243, 0.877);
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:0.1px;
+  transition:all 0.18s ease;
+}
+.assessment-card .ghost-btn:hover{
+  transform:translateY(-1px);
+  background:linear-gradient(135deg,#4c8ffc,#74adff);
+  border:1px solid rgba(37, 161, 243, 0.877);
+  box-shadow:0 14px 30px rgba(88,149,255,0.22);
+}
+.assessment-card .ghost-btn:disabled{
+  opacity:0.75;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
 .assessment-header{
   padding: 32px 28px;
   text-align: center;
@@ -240,35 +267,6 @@
   text-align: center;
 }
 
-.ghost-btn{
-  background: rgba(59,130,246,0.3);
-  color:white;
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
-  margin-right:12px;
-  margin: 0 12px;
-  box-shadow:0 10px 25px rgba(59,130,246,0.18);
-  border:1px solid rgba(37, 161, 243, 0.877);
-  font-size:15px;
-  font-weight:600;
-  letter-spacing:0.1px;
-  transition:all 0.18s ease;
-}
-
-.ghost-btn:hover{
-  transform:translateY(-1px);
-  background:linear-gradient(135deg,#4c8ffc,#74adff);
-  box-shadow:0 14px 30px rgba(88,149,255,0.22);
-  border-color: rgba(37, 161, 243, 0.877);
-}
-.ghost-btn:disabled{
-  opacity:0.55;
-  cursor:not-allowed;
-  transform:none;
-  box-shadow:none;
-}
-
 .profile-banner{
   display:flex;
   align-items:center;
@@ -368,6 +366,7 @@
 .ghost-btn{
   margin-top:12px;
   margin-left:12px;
+
 }
 .delete-btn{
   padding:10px 14px;
@@ -424,4 +423,32 @@
   display: flex;
   justify-content: center;
   gap: 12px;
+  margin-top: 12px;
+}
+
+.delete-modal .ghost-btn{
+  background: rgba(59,130,246,0.3);
+  color:white;
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  margin-top:12px;
+  margin-left:12px;
+  box-shadow:0 10px 25px rgba(59,130,246,0.18);
+  border:1px solid rgba(37, 161, 243, 0.877);
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:0.1px;
+  transition:all 0.18s ease;
+}
+.delete-modal .ghost-btn:hover{
+  transform:translateY(-1px);
+  background:linear-gradient(135deg,#4c8ffc,#74adff);
+  border:1px solid rgba(37, 161, 243, 0.877);
+  box-shadow:0 14px 30px rgba(88,149,255,0.22);
+}
+.delete-modal .ghost-btn:disabled{
+  opacity:0.75;
+  cursor:not-allowed;
+  box-shadow:none;
 }

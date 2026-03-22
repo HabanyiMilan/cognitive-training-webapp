@@ -459,23 +459,10 @@ export default function FloatingLines({
         renderer.domElement.parentElement.removeChild(renderer.domElement);
       }
     };
+    // We intentionally run this only on first mount so the wallpaper animation
+    // keeps its state even when parents re-render (prevents visible restart).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    linesGradient,
-    enabledWaves,
-    lineCount,
-    lineDistance,
-    topWavePosition,
-    middleWavePosition,
-    bottomWavePosition,
-    animationSpeed,
-    interactive,
-    bendRadius,
-    bendStrength,
-    mouseDamping,
-    parallax,
-    parallaxStrength
-  ]);
+  }, []);
 
   return (
     <div

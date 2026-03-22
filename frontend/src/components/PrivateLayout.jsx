@@ -1,5 +1,8 @@
-import { useNavigate, NavLink } from "react-router-dom";
+import { useMemo } from "react";
+import { useNavigate, NavLink, Outlet } from "react-router-dom";
+import FloatingLines from "@/components/FloatingLines";
 import {HomeIcon, LogOutIcon, UserRoundIcon, ChartSplineIcon, Gamepad2Icon} from "lucide-react";
+
 function PrivateLayout({ children }) {
   const navigate = useNavigate();
 
@@ -10,9 +13,22 @@ function PrivateLayout({ children }) {
     navigate("/");
   };
 
+  const wallpaper = useMemo(() => (
+    <div className="wallpaper-bg">
+      <FloatingLines
+        enabledWaves={["top", "middle", "bottom"]}
+        lineCount={5}
+        lineDistance={5}
+        bendRadius={5}
+        bendStrength={-0.5}
+        interactive
+        parallax
+      />
+    </div>
+  ), []);
+
   return (
     <div className="app-container">
-
       <aside className="sidebar">
         <div className="sidebar-top">
           <img
@@ -37,9 +53,13 @@ function PrivateLayout({ children }) {
       </aside>
 
       <main className="app-content">
-        {children}
+        {wallpaper}
+        <div className="wallpaper-wrapper">
+          <div className="wallpaper-content">
+            {children ?? <Outlet />}
+          </div>
+        </div>
       </main>
-
     </div>
   );
 }

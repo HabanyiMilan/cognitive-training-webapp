@@ -47,7 +47,7 @@ body {
 
 .wallpaper-wrapper{
   position: relative;
-  background: #0b1120;
+  background: transparent;
   overflow: hidden;
   min-height: 100%;
 }

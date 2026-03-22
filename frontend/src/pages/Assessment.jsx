@@ -4,21 +4,19 @@ import "../styles/Assessment.css";
 import axios from "axios";
 import Toast from "@/components/Toast.jsx";
 
-export default function Assessment() {
+function Assessment() {
   const navigate = useNavigate();
   const [step, setStep] = useState("method");
   const [importing, setImporting] = useState(false);
   const handleFitbitStart = () => {
-    const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
     if (!user?.id) {
       setToast("Please sign in before importing from Fitbit.");
       return;
     }
     setImporting(true);
     setToast("Opening Fitbit to import your data…");
-    setTimeout(() => {
-      window.location.href = `http://127.0.0.1:5000/auth/fitbit/login?user_id=${user.id}`;
-    }, 120);
+    setTimeout(() => {window.location.href = `http://127.0.0.1:5000/auth/fitbit/login?user_id=${user.id}`;}, 120);
     localStorage.setItem("assessment_success", "Assessment saved successfully.");
   };
 
@@ -222,3 +220,5 @@ export default function Assessment() {
     </div>
   );
 }
+
+export default Assessment;

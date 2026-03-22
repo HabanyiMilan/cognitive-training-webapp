@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "@/components/Toast.jsx";
 import "../styles/Profile.css";
 import "../styles/Index.css";
 import "../styles/Assessment.css";
-import FloatingLines from '@/components/FloatingLines';
 import { Footprints, Activity, Moon, Coffee, Brain, Smartphone, Gamepad2Icon, CrownIcon } from "lucide-react";
 
-export default function Profile() {
+function Profile() {
   const navigate = useNavigate();
   const [step, setStep] = useState("view");
   const [profile, setProfile] = useState(null);
@@ -207,20 +206,11 @@ export default function Profile() {
 
   const progress = ((currentStep + 1) / questions.length) * 100;
 
-  const wallpaper = useMemo(() => (
-    <div className="wallpaper-bg">
-      <FloatingLines enabledWaves={["top","middle","bottom"]} lineCount={5} lineDistance={5} bendRadius={5} bendStrength={-0.5} interactive={true} parallax={true}/>
-    </div>
-  ), []);
-
   if (!profile) {
     return (
-      <div className="wallpaper-wrapper">
-        {wallpaper}
-        <div className="wallpaper-content text-white">
-          <Toast message={toast} onClose={() => setToast("")} />
-          <div className="text-white">Loading...</div>
-        </div>
+      <div className="text-white">
+        <Toast message={toast} onClose={() => setToast("")} />
+        <div className="text-white">Loading...</div>
       </div>
     );
   }
@@ -266,179 +256,178 @@ export default function Profile() {
   ] : [];
 
   return (
-    <div className="wallpaper-wrapper">
-      {wallpaper}
-      <div className="wallpaper-content text-white">
-        <Toast message={toast} onClose={() => setToast("")} />
-        {step === "view" && (
-          <>
-            <div className="profile-banner">
-              <div className="profile-banner__left">
-                <img src={profile.user.profile_picture || "/src/assets/icons/avatar.png"} className="profile-banner__avatar"/>
-                <div className="profile-banner__text">
-                  <h1>{profile.user.name}</h1>
-                  <p className="profile-banner__email">{profile.user.email}</p>
-                  <p className="profile-banner__since">
-                    Member since{" "}
-                    {new Date(profile.user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                  </p>
-                </div>
+    <div className="text-white">
+      <Toast message={toast} onClose={() => setToast("")} />
+      {step === "view" && (
+        <>
+          <div className="profile-banner">
+            <div className="profile-banner__left">
+              <img src={profile.user.profile_picture || "/src/assets/icons/avatar.png"} className="profile-banner__avatar"/>
+              <div className="profile-banner__text">
+                <h1>{profile.user.name}</h1>
+                <p className="profile-banner__email">{profile.user.email}</p>
+                <p className="profile-banner__since">
+                  Member since{" "}
+                  {new Date(profile.user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                </p>
               </div>
-
-              <div className="profile-banner__stats">
-                <div className="stat-card stat-card--blue">
-                  <div className="stat-card__icon"><Gamepad2Icon /></div>
-                  <div>
-                    <p className="stat-card__value">{profile.user.games_played ?? 0}</p>
-                    <p className="stat-card__label">Games Played</p>
-                  </div>
-                </div>
-
-                <div className="stat-card stat-card--blue">
-                  <div className="stat-card__icon"><CrownIcon /></div>
-                  <div>
-                    <p className="stat-card__value">
-                      {profile.user.favorite_game_type ?? "Unknown"}
-                    </p>
-                    <p className="stat-card__label">Favorite Game Type</p>
-                  </div>
-                </div>
-              </div>
-
-            <button className="profile-banner__action" onClick={handleDeleteAccount} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete Account"}
-            </button>
             </div>
 
-              <div className="assessment-card">
-                <div className="assessment-header">
-                  <h2>Assessment</h2>
-                  <p>Your cognitive health habits overview</p>
+            <div className="profile-banner__stats">
+              <div className="stat-card stat-card--blue">
+                <div className="stat-card__icon"><Gamepad2Icon /></div>
+                <div>
+                  <p className="stat-card__value">{profile.user.games_played ?? 0}</p>
+                  <p className="stat-card__label">Games Played</p>
                 </div>
+              </div>
 
-                {profile.assessment ? (
-                  <div className="assessment-body">
-                    <div className="assessment-grid">
-                      {assessmentItems.map((item) => {
-                        const accent = colorScale[item.numeric ?? 0];
-                        return (
-                          <div key={item.title} className={`assessment-card-item`}>
-                            <div className="assessment-card-item__icon" style={{ color: accent }}>
-                              {item.emoji}
-                            </div>
-                            <div className="assessment-card-item__content">
-                              <p className="assessment-card-item__label">{item.title}</p>
-                              <div className="assessment-card-item__value-row">
-                                <span className="assessment-card-item__value">{item.value}</span>
-                                <span className="assessment-card-item__value-dot" style={{ background: accent, boxShadow: `0 0 0 6px ${accent}1f` }} />
-                              </div>
+              <div className="stat-card stat-card--blue">
+                <div className="stat-card__icon"><CrownIcon /></div>
+                <div>
+                  <p className="stat-card__value">
+                    {profile.user.favorite_game_type ?? "Unknown"}
+                  </p>
+                  <p className="stat-card__label">Favorite Game Type</p>
+                </div>
+              </div>
+            </div>
+
+          <button className="profile-banner__action" onClick={handleDeleteAccount} disabled={deleting}>
+            {deleting ? "Deleting..." : "Delete Account"}
+          </button>
+          </div>
+
+            <div className="assessment-card">
+              <div className="assessment-header">
+                <h2>Assessment</h2>
+                <p>Your cognitive health habits overview</p>
+              </div>
+
+              {profile.assessment ? (
+                <div className="assessment-body">
+                  <div className="assessment-grid">
+                    {assessmentItems.map((item) => {
+                      const accent = colorScale[item.numeric ?? 0];
+                      return (
+                        <div key={item.title} className={`assessment-card-item`}>
+                          <div className="assessment-card-item__icon" style={{ color: accent }}>
+                            {item.emoji}
+                          </div>
+                          <div className="assessment-card-item__content">
+                            <p className="assessment-card-item__label">{item.title}</p>
+                            <div className="assessment-card-item__value-row">
+                              <span className="assessment-card-item__value">{item.value}</span>
+                              <span className="assessment-card-item__value-dot" style={{ background: accent, boxShadow: `0 0 0 6px ${accent}1f` }} />
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                    <div className="assessment-footer">
-                      <button className="primary-btn assessment-btn" onClick={handleModify}>
-                        Modify Assessment
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="assessment-empty">
-                    <p className="text-gray-400">No assessment yet.</p>
-                    <button className="primary-btn assessment-btn" onClick={handleModify}>
-                      Add Assessment
+                  <div className="assessment-footer">
+                    <button className="pill-btn" onClick={handleModify}>
+                      Modify Assessment
                     </button>
                   </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {step === "method" && (
-            <div className="assessment-card">
-              <button className="ghost-btn" onClick={handleCancelEdit} disabled={importing}>Cancel</button>
-              <div className="assessment-header flex-row">
-                <div>
-                  <h2>Choose Assessment Method</h2>
-                  <p>Update your answers manually or refresh them using Fitbit data.</p>
                 </div>
-              </div>
-              
-              <div className="assessment-body centered">
-                {importing ? (
-                  <div className="import-loading">
-                    <div className="spinner" aria-label="Loading" />
-                    <p className="import-text">Connecting to Fitbit</p>
-                  </div>
-                ) : (
-                  <div className="method-pills">
-                    <button className="pill-btn" onClick={() => setStep("manual")}>
-                      Fill Manually
-                    </button>
-                    <button className="pill-btn" onClick={handleFitbitStart}>
-                      Import from Fitbit
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {step === "manual" && (
-            <div className="assessment-card">
-              <button className="ghost-btn" onClick={handleCancelEdit}>Cancel</button>
-              <div className="assessment-header flex-row">
-                <div>
-                  <h2>Manual Assessment</h2>
-                  <p>Answer each question to update your assessment.</p>
-                </div>
-              </div>
-                <div className="assessment-body centered">
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${progress}%` }} />
-                </div>
-                <h1 className="assessment-title">{questions[currentStep].question}</h1>
-                <div className="answers">
-                  {questions[currentStep].options.map((option) => (
-                    <button key={option.value} className={`answer-btn ${ formData[questions[currentStep].key] === option.value ? "selected" : "" }`} onClick={() => handleSelect(option.value)}>
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="navigation-buttons">
-                  <button onClick={prevStep} className="nav-btn secondary">
-                    Back
+              ) : (
+                <div className="assessment-empty">
+                  <p className="text-gray-400">No assessment yet.</p>
+                  <button className="primary-btn assessment-btn" onClick={handleModify}>
+                    Add Assessment
                   </button>
-                  {currentStep === questions.length - 1 ? (
-                    <button onClick={handleSubmit} disabled={ loading || formData[questions[currentStep].key] === undefined } className="nav-btn primary">
-                      {loading ? "Saving..." : "Save"}
-                    </button>
-                  ) : (
-                    <button onClick={nextStep} disabled={formData[questions[currentStep].key] === undefined} className="nav-btn primary">Next</button>
-                  )}
                 </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {step === "method" && (
+          <div className="assessment-card">
+            <button className="ghost-btn" onClick={handleCancelEdit} disabled={importing}>Cancel</button>
+            <div className="assessment-header flex-row">
+              <div>
+                <h2>Choose Assessment Method</h2>
+                <p>Update your answers manually or refresh them using Fitbit data.</p>
               </div>
             </div>
-          )}
-        {showDeleteConfirm && (
-          <div className="modal-overlay">
-            <div className="delete-modal">
-              <h3>Are you absolutely sure?</h3>
-              <p>This action cannot be undone. This will permanently delete your account and remove all your data from our servers.</p>
-              <div className="delete-modal__actions">
-                <button className="ghost-btn" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
-                  Cancel
+            
+            <div className="assessment-body centered">
+              {importing ? (
+                <div className="import-loading">
+                  <div className="spinner" aria-label="Loading" />
+                  <p className="import-text">Connecting to Fitbit</p>
+                </div>
+              ) : (
+                <div className="method-pills">
+                  <button className="pill-btn" onClick={() => setStep("manual")}>
+                    Fill Manually
+                  </button>
+                  <button className="pill-btn" onClick={handleFitbitStart}>
+                    Import from Fitbit
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {step === "manual" && (
+          <div className="assessment-card">
+            <button className="ghost-btn" onClick={handleCancelEdit}>Cancel</button>
+            <div className="assessment-header flex-row">
+              <div>
+                <h2>Manual Assessment</h2>
+                <p>Answer each question to update your assessment.</p>
+              </div>
+            </div>
+              <div className="assessment-body centered">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progress}%` }} />
+              </div>
+              <h1 className="assessment-title">{questions[currentStep].question}</h1>
+              <div className="answers">
+                {questions[currentStep].options.map((option) => (
+                  <button key={option.value} className={`answer-btn ${ formData[questions[currentStep].key] === option.value ? "selected" : "" }`} onClick={() => handleSelect(option.value)}>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="navigation-buttons">
+                <button onClick={prevStep} className="nav-btn secondary">
+                  Back
                 </button>
-                <button className="delete-btn" onClick={confirmDelete} disabled={deleting}>
-                  {deleting ? "Deleting..." : "Delete Account"}
-                </button>
+                {currentStep === questions.length - 1 ? (
+                  <button onClick={handleSubmit} disabled={ loading || formData[questions[currentStep].key] === undefined } className="nav-btn primary">
+                    {loading ? "Saving..." : "Save"}
+                  </button>
+                ) : (
+                  <button onClick={nextStep} disabled={formData[questions[currentStep].key] === undefined} className="nav-btn primary">Next</button>
+                )}
               </div>
             </div>
           </div>
         )}
-      </div>
+      {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="delete-modal">
+            <h3>Are you absolutely sure?</h3>
+            <p>This action cannot be undone. This will permanently delete your account and remove all your data from our servers.</p>
+            <div className="delete-modal__actions">
+              <button className="ghost-btn" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
+                Cancel
+              </button>
+              <button className="delete-btn" onClick={confirmDelete} disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete Account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default Profile;

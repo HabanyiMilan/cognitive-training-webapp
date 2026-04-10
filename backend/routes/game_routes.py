@@ -14,14 +14,14 @@ def get_games():
 @token_required
 def record_session_route(current_user, game_id):
     data = request.get_json() or {}
-    if "score" not in data:
-        return jsonify({"error": "score is required"}), 400
+    if "elapsed" not in data or "mistakes" not in data:
+        return jsonify({"error": "elapsed time and mistakes are required"}), 400
 
     try:
         session = record_game_session(
             user_id=current_user.id,
             game_id=game_id,
-            score=int(data["score"]),
+            elapsed=data.get("elapsed"),
             mistakes=data.get("mistakes"),
             started_at=data.get("started_at"),
             finished_at=data.get("finished_at"),

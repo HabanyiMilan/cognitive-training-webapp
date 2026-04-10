@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import Profile from "./pages/Profile";
 import Games from "./pages/Games"
 import CardMatch from "./Games/CardMatch/CardMatch";
+import Statistics from "./pages/Statistics";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="home" element={<Home />} />
           <Route path="games" element={<Games />} />
           <Route path="games/card-match" element={<CardMatch />} />
+          <Route path="statistics" element={<Statistics />} />
           <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={

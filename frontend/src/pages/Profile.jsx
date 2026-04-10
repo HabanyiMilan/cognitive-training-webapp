@@ -4,7 +4,7 @@ import Toast from "@/components/Toast.jsx";
 import "../styles/Profile.css";
 import "../styles/Index.css";
 import "../styles/Assessment.css";
-import { Footprints, Activity, Moon, Coffee, Brain, Smartphone, Gamepad2Icon, CrownIcon } from "lucide-react";
+import { BicepsFlexed, Activity, Moon, Coffee, Brain, Smartphone, Gamepad2Icon, CrownIcon } from "lucide-react";
 
 function Profile() {
   const navigate = useNavigate();
@@ -221,7 +221,7 @@ function Profile() {
       title: "Physical Activity",
       value: profile.assessment.activity_label,
       numeric: profile.assessment.physical_activity,
-      emoji: <Footprints size={24} />
+      emoji: <BicepsFlexed size={24} />
     },
     {
       title: "Sleeping Hours",

@@ -143,7 +143,7 @@ function CardMatch() {
     }, 1000);
   };
 
-  const recordSession = useCallback(async (finalScore) => {
+  const recordSession = useCallback(async () => {
     if (sessionStatus === "saved" || !gameIdRef.current) return;
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -157,7 +157,7 @@ function CardMatch() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          score: finalScore,
+          elapsed,
           mistakes,
           started_at: startTimeRef.current,
           finished_at: new Date().toISOString(),
@@ -181,7 +181,7 @@ function CardMatch() {
       finishedRef.current = true;
       setShowFinish(true);
       if (timerRef.current) clearInterval(timerRef.current);
-      recordSession(PAIR_COUNT);
+      recordSession();
     }
   }, [matches, recordSession]);
 

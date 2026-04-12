@@ -1,4 +1,4 @@
-.home-wrapper {
+.landing-wrapper {
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -8,7 +8,7 @@
   background-position: center;
 }
 
-.home-card {
+.landing-card {
   max-width: 850px;
   width: 90%;
   padding: 60px 50px;
@@ -23,7 +23,7 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
-.home-logo {
+.landing-logo {
   display: block;
   height: 140px;
   margin: 0 auto 20px;
@@ -36,7 +36,7 @@
   margin: 10px 0 28px;
 }
 
-.home-text {
+.landing-text {
   color: #cbd5e1;
   font-size: 18px;
   line-height: 1.7;
@@ -44,6 +44,6 @@
   text-align: center;
 }
 
-.home-text p {
+.landing-text p {
   margin-bottom: 20px;
 }

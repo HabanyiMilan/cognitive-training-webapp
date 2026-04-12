@@ -32,5 +32,7 @@ Cognitive performance web application designed to improve and analyze users' cog
 - Similar website(Human Benchmark): https://humanbenchmark.com/
 - Memory Game in python: https://www.youtube.com/watch?v=b5EuZrWUZAw
 - Documentation: https://www.simplypsychology.org/working-memory.html
+- AI rules: https://link.springer.com/article/10.1186/1479-5868-7-22
+- AI rules 2: https://www.frontiersin.org/journals/aging-neuroscience/articles/10.3389/fnagi.2010.00027/full
 - Formatting(components): https://reactbits.dev/
 - Ollama statistics analyzing AI

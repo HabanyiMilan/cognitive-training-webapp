@@ -20,9 +20,9 @@ with app.app_context():
             description="Train your memory and concentration with Card Match, a classic card-pairing game where every move counts. Flip cards, remember their positions, and find matching pairs as quickly as possible. The fewer mistakes you make and the faster you finish, the better your score will be.",
             ability_type=AbilityType.MEMORY,
             difficulty=Difficulty.EASY,
-            time_limit=120,
+            time_limit=240,
             max_score=2000,
-            icon_path="CardMatch.png",
+            icon_path="card-match.png",
         ),
         Game(
             name="Number Puzzle",
@@ -32,7 +32,7 @@ with app.app_context():
             difficulty=Difficulty.MEDIUM,
             time_limit=180,
             max_score=2000,
-            icon_path="CardMatch.png",
+            icon_path="card-match.png",
         ),
         Game(
             name="Attention Focus",
@@ -42,7 +42,7 @@ with app.app_context():
             difficulty=Difficulty.HARD,
             time_limit=60,
             max_score=2000,
-            icon_path="CardMatch.png",
+            icon_path="card-match.png",
         )
     ]
 
@@ -152,6 +152,12 @@ with app.app_context():
 
         my_user.streak = streak
         my_user.last_played_date = datetime.utcnow()
+        most_played_ability = (db.session.query(Game.ability_type, db.func.count(Session.id).label("count")).join(Session, Session.game_id == Game.id)
+                                .filter(Session.user_id == my_user.id)
+                                .group_by(Game.ability_type)
+                                .order_by(db.desc("count"))
+                                .first())
+        my_user.favorite_game_type = most_played_ability[0]
 
         db.session.commit()
 

@@ -1,6 +1,7 @@
 from models.user import User
 from models.assessment import Assessment
 from database import db
+from datetime import datetime, timedelta
 
 def get_assessment(assessment):
     if not assessment:
@@ -55,3 +56,27 @@ def delete_profile(user_id):
     db.session.delete(user)
     db.session.commit()
     return True
+
+from services.statistics_service import get_activity_calendar
+def get_week_activity(user_id: int):
+    today = datetime.utcnow().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    
+    calendar = get_activity_calendar(user_id)
+
+    played_days = {
+        entry["date"]
+        for entry in calendar
+        if start_of_week <= datetime.fromisoformat(entry["date"]).date() <= today
+    }
+
+    week = []
+    for i in range(7):
+        day = start_of_week + timedelta(days=i)
+        iso = day.isoformat()
+        week.append({
+            "date": iso,
+            "played": iso in played_days
+        })
+
+    return week

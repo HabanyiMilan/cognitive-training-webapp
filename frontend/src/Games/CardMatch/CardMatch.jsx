@@ -16,7 +16,7 @@ const IMAGE_FACES = Object.entries(
   };
 });
 
-const PAIR_COUNT = 8;
+const PAIR_COUNT = 12;
 
 function shuffle(list) {
   const arr = [...list];
@@ -70,6 +70,7 @@ function CardMatch() {
   const [elapsed, setElapsed] = useState(0);
   const [timeLeft, setTimeLeft] = useState(300);
   const [showFinish, setShowFinish] = useState(false);
+  const [gameMeta, setGameMeta] = useState(null);
   const [sessionStatus, setSessionStatus] = useState("idle");
 
   const startTimeRef = useRef(new Date().toISOString());
@@ -102,6 +103,9 @@ function CardMatch() {
         if (!res.ok) return;
         const data = await res.json();
         const cardMatch = data.games?.find((game) => game.slug === "card-match");
+        if (cardMatch) {
+          setGameMeta(cardMatch);
+        }
         if (cardMatch?.id) gameIdRef.current = cardMatch.id;
         if (cardMatch?.time_limit) {
           const limit = Number(cardMatch.time_limit) || 300;
@@ -185,6 +189,26 @@ function CardMatch() {
     }
   }, [matches, recordSession]);
 
+  const maxScore = gameMeta?.max_score || 2000;
+  const timeLimit = gameMeta?.time_limit || timeLimitRef.current;
+  const timeFactor = Math.max(0, 1 - elapsed / timeLimit);
+  const mistakeFactor = Math.max(0, 1 - mistakes / 30);
+
+  const estimatedScore = Math.floor(
+    maxScore * (0.6 * timeFactor + 0.4 * mistakeFactor)
+  );
+
+  const finalScoreRef = useRef(null);
+  useEffect(() => {
+    if (showFinish && finalScoreRef.current === null) {
+      finalScoreRef.current = estimatedScore;
+    }
+  }, [showFinish, estimatedScore]);
+
+  const displayScore = showFinish
+    ? finalScoreRef.current
+    : estimatedScore;
+    
   const handleCardClick = (card) => {
     if (lockBoard || card.matched || card.flipped) return;
 
@@ -231,10 +255,14 @@ function CardMatch() {
         </button>
         <div className="cardmatch-stats">
           <div className="stat-chip">
-            <span className="stat-label">Score</span>
+            <span className="stat-label">Progress:</span>
             <span className="stat-value">
               {matches}/{PAIR_COUNT}
             </span>
+          </div>
+          <div className="stat-chip">
+            <span className="stat-label">Score</span>
+            <span className="stat-value">{displayScore}</span>
           </div>
           <div className="stat-chip">
             <span className="stat-label">Mistakes</span>
@@ -291,6 +319,7 @@ function CardMatch() {
             <p>
               You matched all pairs in {formatTime(elapsed)} with {mistakes} mistake
               {mistakes === 1 ? "" : "s"}.
+              You got {estimatedScore} for your performance.
             </p>
             {sessionStatus === "error" && (
               <p className="error-note">

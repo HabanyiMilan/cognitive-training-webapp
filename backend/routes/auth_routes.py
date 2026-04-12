@@ -105,10 +105,14 @@ def me(current_user):
         .filter_by(user_id=current_user.id)
         .first() is not None
     )
+    streak = current_user.streak
+    last_active = current_user.last_played_date
     return jsonify({
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
         "profile_picture": current_user.profile_picture,
         "has_assessment": has_assessment,
+        "streak": streak,
+        "last_active": last_active.isoformat() if last_active else None
     })

@@ -21,3 +21,10 @@ def delete_profile_route(current_user):
     if not delete:
         return {"error": "not found"}, 404
     return "", 204
+
+from services.profile_service import get_week_activity
+@bp.route("/activity/week", methods=["GET"])
+@token_required
+def week_activity(current_user):
+    activity = get_week_activity(current_user.id)
+    return jsonify(activity)

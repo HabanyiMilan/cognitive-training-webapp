@@ -49,10 +49,10 @@ function LandingPage() {
   };
 
   return (
-    <div className="home-wrapper">
+    <div className="landing-wrapper">
       <Toast message={toast} onClose={() => setToast("")} />
-      <div className="home-card">
-        <img src="/src/assets/icons/Cognitra.png" alt="Cognitra Logo" className="home-logo"/>
+      <div className="landing-card">
+        <img src="/src/assets/icons/Cognitra.png" alt="Cognitra Logo" className="landing-logo"/>
         <div className="login-container">
           <GoogleLogin
             onSuccess={handleLoginSuccess}
@@ -62,7 +62,7 @@ function LandingPage() {
             locale="en"
           />
         </div>
-        <div className="home-text">
+        <div className="landing-text">
           <p>
             Cognitive abilities such as memory, attention, and problem-solving play a fundamental role
             in everyday performance and long-term development. 

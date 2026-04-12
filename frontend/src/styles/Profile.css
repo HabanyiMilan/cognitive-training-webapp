@@ -27,6 +27,7 @@
   border:1px solid rgba(37, 161, 243, 0.877);
   font-size:15px;
   font-weight:600;
+  min-width: 50px;
   letter-spacing:0.1px;
   transition:all 0.18s ease;
 }

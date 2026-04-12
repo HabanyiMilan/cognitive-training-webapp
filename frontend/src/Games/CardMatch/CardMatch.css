@@ -10,7 +10,7 @@
   align-items:center;
   justify-content:space-between;
   gap:16px;
-  background:rgba(15,23,42,0.7);
+  background: linear-gradient(135deg, rgba(26, 41, 66, 0.9), rgba(11, 23, 41, 0.92));
   border:1px solid rgba(59,130,246,0.35);
   padding:12px 16px;
   border-radius:16px;
@@ -112,7 +112,7 @@
 
 .cardmatch-shell{
   width:100%;
-  max-width:90vw;
+  max-width:1100px;
   background: linear-gradient(135deg, #1a2942e6, #0f1c2ee6);
   border:1px solid rgba(148,163,184,0.2);
   border-radius:20px;
@@ -140,20 +140,17 @@
 .cardmatch-board{
   display:grid;
   width:100%;
-  grid-template-columns:repeat(8, minmax(120px, 1fr));
-  grid-template-rows:repeat(2, minmax(170px, 22vh));
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  grid-template-rows: repeat(4, 1fr);
   gap:12px;
   margin-top:18px;
   align-items:center;
   justify-items:center;
 }
-.cardmatch-board.two-rows{
-  grid-auto-flow: column;
-}
 
 .card-tile{
   position:relative;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 1 / 1;
   width:100%;
   border:none;
   cursor:pointer;
@@ -194,9 +191,9 @@
   box-sizing:border-box;
 }
 .card-face-img{
-  width:98%;
-  height:98%;
-  object-fit:cover;
+  width:100%;
+  height:100%;
+  object-fit:contain;
   box-sizing:border-box;
 }
 .card-face .card-label{

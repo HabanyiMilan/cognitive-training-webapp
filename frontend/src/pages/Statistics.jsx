@@ -14,6 +14,11 @@ const abilityMeta = {
 function Statistics() {
   const [stats, setStats] = useState(null);
 
+  const [selectedAbility, setSelectedAbility] = useState(null);
+  const [aiData, setAiData] = useState(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [abilityProgress, setAbilityProgress] = useState([]);
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -37,6 +42,40 @@ function Statistics() {
   const insights = stats?.insights || [];
   const comparison = stats?.comparison || {};
   const progress = stats?.progress || [];
+
+  const handleAbilityClick = async (abilityKey) => {
+  setLoadingAI(true);
+  setSelectedAbility(abilityKey);
+  setAiData(null);
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API_BASE}/statistics/analyze`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ ability: abilityKey })
+    });
+
+    const data = await res.json();
+    if (data.error) {
+      console.error(data.error);
+      setLoadingAI(false);
+      return;
+    }
+
+    setAiData(data.analysis);
+    setAbilityProgress(data.progress || []);
+
+  } catch (err) {
+    console.error(err);
+  }
+
+  setLoadingAI(false);
+};
 
   const chartData = Object.keys(comparison).map((key) => ({
     name: abilityMeta[key]?.label,
@@ -111,6 +150,123 @@ function Statistics() {
     return <div className="statistics-page">Loading...</div>;
   }
 
+  if (selectedAbility) {
+    return (
+      <div className="statistics-page ai-page">
+        <div className="ai-topbar">
+          <button onClick={() => { setSelectedAbility(null); setAiData(null); }} className="back-button">
+            Back
+          </button>
+          
+          <h2 className="ai-title">{abilityMeta[selectedAbility]?.label} - AI Analysis</h2>
+        </div>
+
+        {loadingAI ? (
+          <div className="ai-card-loading">
+            <div className ="spinner" />
+            <p className="muted">Analyzing {abilityMeta[selectedAbility]?.label} ability in progress...</p>
+          </div>
+        ) : aiData ? (
+          <div className="ai-wrapper">
+            <div className="ai-card overview">
+              <div className="ai-card-title">
+                <Brain size={20} />
+                <span>AI Overview</span>
+              </div>
+              <p className="ai-overview">{aiData?.overview || "No overview available."}</p>
+            </div>
+            {abilityProgress.length > 0 && (
+            <div className="ai-card chart">
+              <div className="ai-card-title">
+                <ChartLine size={20} />
+                <span>Your {abilityMeta[selectedAbility]?.label} Progress Trend</span>
+              </div>
+
+              <div style={{ width: "100%", height: 180 }}>
+                <ResponsiveContainer>
+                  <AreaChart data={abilityProgress}>
+                    <defs>
+                      <linearGradient id="colorAbility" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4bb5ff" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#4bb5ff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+
+                    <XAxis dataKey="date" tick={{ fill: "#8aa0c4", fontSize: 11 }} />
+                    <YAxis tick={{ fill: "#8aa0c4", fontSize: 11 }} />
+
+                    <Tooltip content={<CustomTooltip />} />
+
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke="#4bb5ff"
+                      strokeWidth={2}
+                      fill="url(#colorAbility)"
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            )}
+
+            <div className="ai-card positive">
+              <div className="ai-card-title">
+                <TrendingUp size={20} />
+                <span>Strengths</span>
+              </div>
+              <ul className="ai-list">
+                {aiData?.strengths?.map((s, i) => (
+                  <li key={i}>
+                    <TrendingUp size={16} />
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="ai-card warning">
+              <div className="ai-card-title">
+                <AlertTriangle size={20} />
+                <span>Weaknesses</span>
+              </div>
+              <ul className="ai-list">
+                {aiData?.weaknesses?.map((w, i) => (
+                  <li key={i}>
+                    <AlertTriangle size={16} />
+                    <span>{w}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="ai-card info">
+              <div className="ai-card-title">
+                <EqualApproximately size={20} />
+                <span>Personalized Recommendations</span>
+              </div>
+              <ul className="ai-list">
+                {aiData?.recommendations?.map((r, i) => (
+                  <li key={i}>
+                    <EqualApproximately size={16} />
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : (
+          <div className="ai-card">
+            <p className="muted">Select an ability to view its AI overview.</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="statistics-page">
       <header className="stats-hero">
@@ -133,7 +289,7 @@ function Statistics() {
                 const meta = abilityMeta[key];
 
                 return (
-                  <div className="ability-row" key={key}>
+                  <div className="ability-row" key={key} onClick={() => handleAbilityClick(key)} style={{ cursor: "pointer" }}>
                     <div className="ability-id">
                       <div className="ability-icon" style={{ background: `${meta.color}22`, color: meta.color }}>
                         {meta.icon}
@@ -197,7 +353,7 @@ function Statistics() {
           <section className="card progress-card">
             <h2 className="card-title">
               <ChartLine size={24} />
-              <span>Progress Over Time</span>
+              <span>Overall Cognitive Progress</span>
             </h2>
             {progress.length ? (
             <div className="progress-linechart modern">
@@ -256,7 +412,9 @@ function Statistics() {
                   <Gamepad2 size={20} />
                   <span className="metric-label">Avg Mistakes Count</span>
                 </div>
-                <p className="metric-value large center">{Math.round(general.avg_mistakes)}</p>
+                <p className="metric-value large center">
+                  {Math.round(general.avg_mistakes)} mistakes
+                </p>
               </div>
             </div>
           </section>
@@ -317,12 +475,7 @@ function Statistics() {
                 {weeks.map((week, i) => (
                   <div key={i} className="calendar-week">
                     {week.map((day, j) => (
-                      <div
-                        key={j}
-                        className="calendar-cell"
-                        style={{ background: getColor(day.count) }}
-                        title={`${day.date} - ${day.count} sessions`}
-                      />
+                      <div key={j} className="calendar-cell" style={{ background: getColor(day.count) }} title={`${day.date} - ${day.count} sessions`}/>
                     ))}
                   </div>
                 ))}

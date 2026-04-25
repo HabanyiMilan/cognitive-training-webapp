@@ -22,7 +22,7 @@ def create_app():
 
     import models
 
-    # Route-ok regisztrálása
+    # Route-ok
     from routes import main_routes
     app.register_blueprint(main_routes.bp)
     from routes import auth_routes

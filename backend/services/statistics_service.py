@@ -318,8 +318,8 @@ def generate_AI_analyzis(user_id: int, ability_type: str):
             - Avg Mistakes: {general.get("avg_mistakes")}
             - Total Training Time: {general.get("total_time")} seconds
             - Performance vs Others: {general.get("performance_comparison")}%
-            (Interpret performance difference as: - positive → better than average 
-                                                  - negative → worse than average)
+            (Interpret performance difference as: - positive : better than average 
+                                                  - negative : worse than average)
 
             Assessment:
             - Sleep: {sleep}
@@ -380,7 +380,6 @@ def generate_AI_analyzis(user_id: int, ability_type: str):
 def clean_ai_response(text):
     text = re.sub(r"```json|```", "", text).strip()
 
-    # csak az első JSON blokk
     start = text.find("{")
     end = text.rfind("}")
 

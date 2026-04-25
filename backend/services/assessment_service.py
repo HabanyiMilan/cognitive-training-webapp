@@ -28,15 +28,19 @@ def estimate_stress(avg_hrv, sleep_hours):
     else:
         return 0
 
+from adapters.manual_adapter import ManualAdapter
 def create_manual_assessment(user_id, data):
+    adapter = ManualAdapter()
+    health_data = adapter.get_health_data(data)
+
     assessment = Assessment(
         user_id=user_id,
-        sleep_hours=int(data.get("sleep_hours")),
-        caffeine_per_day=int(data.get("caffeine_per_day")),
-        daily_screen_time=int(data.get("daily_screen_time")),
-        stress_level=int(data.get("stress_level")),
-        physical_activity=int(data.get("physical_activity")),
-        concentration_level=int(data.get("concentration_level")),
+        sleep_hours=int(health_data.sleep_hours),
+        caffeine_per_day=int(health_data.caffeine_per_day),
+        daily_screen_time=int(health_data.daily_screen_time),
+        stress_level=int(health_data.stress_level),
+        physical_activity=int(health_data.physical_activity),
+        concentration_level=int(health_data.concentration_level),
         source="manual",
     )
 

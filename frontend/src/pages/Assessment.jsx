@@ -144,9 +144,9 @@ function Assessment() {
   const progress = ((currentStep + 1) / questions.length) * 100;
 
   return (
-    <div className="home-wrapper">
+    <div className="landing-wrapper">
       <Toast message={toast} onClose={() => setToast("")} />
-      <div className="home-card">
+      <div className="landing-card">
         <img
           src="/src/assets/icons/Cognitra.png"
           alt="Cognitra Logo"

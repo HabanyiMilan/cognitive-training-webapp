@@ -16,4 +16,4 @@ class User(db.Model):
     last_played_date = db.Column(db.DateTime, nullable=True)
     
     assessments = db.relationship('Assessment', backref='user', cascade="all, delete-orphan", lazy=True)
-    sessions = db.relationship('Session', backref='user', lazy=True)
+    sessions = db.relationship('Session', backref='user', cascade="all, delete-orphan", lazy=True)

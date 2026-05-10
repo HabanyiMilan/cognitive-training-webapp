@@ -14,6 +14,9 @@ function Games() {
     if (game?.slug === "card-match") {
       navigate("/games/card-match");
       return;
+    } else if (game?.slug === "logic-shift") {
+      navigate("/games/logic-shift");
+      return;
     }
     setToast(`${game?.name ?? "Game"} launcher coming soon.`);
   };

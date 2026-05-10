@@ -13,7 +13,7 @@ def random_date(days_back=30):
     return now - timedelta(days=random.randint(0, days_back), hours=random.randint(0, 23))
 
 with app.app_context():
-    """ games = [
+    games = [
         Game(
             name="Card Match",
             slug="card-match",
@@ -25,12 +25,12 @@ with app.app_context():
             icon_path="card-match.png",
         ),
         Game(
-            name="Number Puzzle",
-            slug="number-puzzle",
-            description="Challenge your problem-solving skills with Number Puzzle, a game that tests your ability to think logically and strategically. Arrange the numbers in the correct order by sliding them into the empty space. The fewer moves you make and the faster you complete the puzzle, the higher your score will be.",
+            name="Logic Shift",
+            slug="logic-shift",
+            description="Challenge your problem-solving skills with Logic Shift, a game that tests your ability to think critically and adapt to changing rules. Solve puzzles by identifying patterns and shifting your logic to find the correct solution. The faster you solve each puzzle, the higher your score will be.",
             ability_type=AbilityType.PROBLEM_SOLVING,
             difficulty=Difficulty.MEDIUM,
-            time_limit=180,
+            time_limit=300,
             max_score=2000,
             icon_path="card-match.png",
         ),
@@ -104,9 +104,9 @@ with app.app_context():
         user.streak = random.randint(1, 10)
 
     db.session.commit()
-    print("Sessions inserted.") """
+    print("Sessions inserted.")
 
-    games = Game.query.all()
+    """games = Game.query.all()
 
     my_user = User.query.filter_by(email="habanyim@gmail.com").first()
 
@@ -161,4 +161,4 @@ with app.app_context():
 
         db.session.commit()
 
-        print("Test user sessions inserted.")
+        print("Test user sessions inserted.") """

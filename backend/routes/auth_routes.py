@@ -96,7 +96,7 @@ def fitbit_callback():
 
     return redirect("http://127.0.0.1:5173/dashboard")
 
-
+from services.auth_service import validate_user_streak
 @bp.route("/me", methods=["GET"])
 @token_required
 def me(current_user):
@@ -105,6 +105,7 @@ def me(current_user):
         .filter_by(user_id=current_user.id)
         .first() is not None
     )
+    validate_user_streak(current_user)
     streak = current_user.streak
     last_active = current_user.last_played_date
     return jsonify({

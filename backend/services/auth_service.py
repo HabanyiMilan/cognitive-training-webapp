@@ -14,6 +14,19 @@ def get_or_create_user(name, email, profile_picture, google_id):
         db.session.commit()
     return user
 
+def validate_user_streak(user):
+    if not user.last_played_date:
+        return
+
+    today = datetime.utcnow().date()
+    last_date = user.last_played_date.date()
+
+    delta_days = (today - last_date).days
+
+    if delta_days > 1:
+        user.streak = 0
+        db.session.commit()
+
 def generate_jwt(user):
     payload = {
         "user_id": user.id,

@@ -50,7 +50,7 @@ def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
 
 
 def record_game_session(user_id: int, game_id: int, mistakes: Optional[int] = None, elapsed: Optional[int] = None,
-                        started_at: Optional[str] = None, finished_at: Optional[str] = None) -> Optional[Session]:
+                        started_at: Optional[str] = None, finished_at: Optional[str] = None, score: Optional[int] = None) -> Optional[Session]:
     game = Game.query.get(game_id)
     user = User.query.get(user_id)
 
@@ -61,21 +61,14 @@ def record_game_session(user_id: int, game_id: int, mistakes: Optional[int] = No
     end_dt = _parse_datetime(finished_at) or datetime.utcnow()
     mistakes = int(mistakes or 0)
     elapsed = int(elapsed or 0)
+    estimated_score = int(score or 0)
 
-    max_score = game.max_score
-
-    max_mistakes = 30
-    mistake_factor = max(0, 1-(mistakes/max_mistakes))
-
-    time_limit = game.time_limit
-    time_factor = max(0, 1-(elapsed/time_limit))
-
-    new_score = int(max_score * (0.6 * time_factor + 0.4 * mistake_factor))
+    print('score:', estimated_score)
 
     session = Session(
         user_id=user_id,
         game_id=game_id,
-        score=new_score,
+        score=estimated_score,
         mistakes=mistakes,
         started_at=start_dt,
         finished_at=end_dt,

@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import PublicLayout from "./components/PublicLayout";
 import PrivateLayout from "./components/PrivateLayout";
+import GameLayout from "./components/GameLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Assessment from "./pages/Assessment";
 import Home from "./pages/Home";
@@ -31,10 +32,16 @@ function App() {
         }>
           <Route path="home" element={<Home />} />
           <Route path="games" element={<Games />} />
-          <Route path="games/card-match" element={<CardMatch />} />
-          <Route path="games/logic-shift" element={<LogicShift />} />
           <Route path="statistics" element={<Statistics />} />
           <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route element={
+            <ProtectedRoute>
+              <GameLayout />
+            </ProtectedRoute>
+        }>
+          <Route path="games/card-match" element={<CardMatch />} />
+          <Route path="games/logic-shift" element={<LogicShift />} />
         </Route>
         <Route path="*" element={
           <PublicLayout>

@@ -25,6 +25,7 @@ def record_session_route(current_user, game_id):
             mistakes=data.get("mistakes"),
             started_at=data.get("started_at"),
             finished_at=data.get("finished_at"),
+            score=data.get("estimated_score")
         )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400

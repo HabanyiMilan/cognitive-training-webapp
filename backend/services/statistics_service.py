@@ -220,7 +220,7 @@ def get_performance_insights(user_id: int):
         insights.append({
             "type": "warning",
             "title": "Room for Improvement",
-            "message": f"Your average score is better than {percentile}% of players. Keep training to improve!"
+            "message": f"Your average score is worse than the majority of players average. Keep training to improve!"
         })
 
     user_mistakes = db.session.query(db.func.avg(Session.mistakes)).filter(Session.user_id == user_id).scalar() or 0

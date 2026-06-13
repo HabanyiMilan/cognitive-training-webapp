@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Trophy } from "lucide-react";
+import { DoorOpen, RotateCcw, Trophy, Menu, Play, Music, ClockAlert } from "lucide-react";
+import Confetti from "react-confetti";
 import "@/Games/CardMatch/CardMatch.css";
 
 const API_BASE = "http://127.0.0.1:5000";
@@ -72,6 +73,19 @@ function CardMatch() {
   const [showFinish, setShowFinish] = useState(false);
   const [gameMeta, setGameMeta] = useState(null);
   const [sessionStatus, setSessionStatus] = useState("idle");
+  const [gameState, setGameState] = useState("instructions");
+  const [floatingScores, setFloatingScores] = useState([]);
+  const [finishReason, setFinishReason] = useState(null); // "completed" or "timeout"
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const countSoundRef = useRef(null);
+  const startSoundRef = useRef(null);
+  const musicRef = useRef(null);
+  const flipSoundRef = useRef(null);
+  const matchSoundRef = useRef(null);
+  const victorySoundRef = useRef(null);
+  const loseSoundRef = useRef(null);
+  const [countdown, setCountdown] = useState(3);
+  const [moves, setMoves] = useState(0);
 
   const startTimeRef = useRef(new Date().toISOString());
   const finishedRef = useRef(false);
@@ -80,21 +94,30 @@ function CardMatch() {
   const timeLimitRef = useRef(300);
 
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 1);
-      setTimeLeft((prev) => {
-        const next = Math.max(0, prev - 1);
-        if (next === 0 && timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        return next;
-      });
-    }, 1000);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
+  if (gameState !== "playing") return;
+
+  timerRef.current = setInterval(() => {
+    setElapsed((prev) => prev + 1);
+
+    setTimeLeft((prev) => {
+      const next = Math.max(0, prev - 1);
+
+      if (next === 0 && timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      return next;
+    });
+  }, 1000);
+
+  return () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+}, [gameState]);
 
   useEffect(() => {
     const fetchGameMeta = async () => {
@@ -121,11 +144,15 @@ function CardMatch() {
 
   const resetGame = () => {
     setCards(createDeck());
+    setGameState("instructions");
+    setFinishReason(null);
+    setCountdown(3);
     setFirstCard(null);
     setLockBoard(false);
     setMatches(0);
     setMistakes(0);
     setElapsed(0);
+    setMoves(0);
     setTimeLeft(timeLimitRef.current);
     setShowFinish(false);
     setSessionStatus("idle");
@@ -133,18 +160,8 @@ function CardMatch() {
     startTimeRef.current = new Date().toISOString();
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-    timerRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 1);
-      setTimeLeft((prev) => {
-        const next = Math.max(0, prev - 1);
-        if (next === 0 && timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-        return next;
-      });
-    }, 1000);
   };
 
   const recordSession = useCallback(async () => {
@@ -165,6 +182,7 @@ function CardMatch() {
           mistakes,
           started_at: startTimeRef.current,
           finished_at: new Date().toISOString(),
+          estimated_score: estimatedScore
         }),
       });
 
@@ -181,13 +199,44 @@ function CardMatch() {
   }, [mistakes, sessionStatus]);
 
   useEffect(() => {
-    if (matches === PAIR_COUNT && !finishedRef.current) {
-      finishedRef.current = true;
-      setShowFinish(true);
-      if (timerRef.current) clearInterval(timerRef.current);
-      recordSession();
+  if (matches === PAIR_COUNT && !finishedRef.current) {
+    finishedRef.current = true;
+
+    setFinishReason("win");
+    setShowFinish(true);
+    setGameState("finished");
+
+    if (musicRef.current) { musicRef.current.pause();}
+
+    if (victorySoundRef.current) {victorySoundRef.current.currentTime = 0; victorySoundRef.current.play().catch(() => {});}
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
-  }, [matches, recordSession]);
+
+    recordSession();
+  }
+}, [matches, recordSession]);
+
+useEffect(() => {
+  if (timeLeft === 0 && !finishedRef.current) {
+    finishedRef.current = true;
+
+    setFinishReason("timeout");
+    setShowFinish(true);
+    setGameState("finished");
+
+    if (musicRef.current) { musicRef.current.pause();}
+
+    if (loseSoundRef.current) {loseSoundRef.current.currentTime = 0; loseSoundRef.current.play().catch(() => {});}
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    recordSession();
+  }
+}, [timeLeft, recordSession]);
 
   const maxScore = gameMeta?.max_score || 2000;
   const timeLimit = gameMeta?.time_limit || timeLimitRef.current;
@@ -210,7 +259,8 @@ function CardMatch() {
     : estimatedScore;
     
   const handleCardClick = (card) => {
-    if (lockBoard || card.matched || card.flipped) return;
+    if (gameState !== "playing" || lockBoard || card.matched || card.flipped) return;
+    if (flipSoundRef.current) {flipSoundRef.current.currentTime = 0;flipSoundRef.current.play().catch(() => {});}
 
     setCards((prev) => prev.map((c) => (c.id === card.id ? { ...c, flipped: true } : c)));
 
@@ -220,6 +270,7 @@ function CardMatch() {
     }
 
     setLockBoard(true);
+    setMoves(prev => prev + 1);
     const isMatch = firstCard.value === card.value;
 
     if (isMatch) {
@@ -230,9 +281,26 @@ function CardMatch() {
             : c
         )
       );
+      if (matchSoundRef.current) {matchSoundRef.current.currentTime = 0; matchSoundRef.current.play().catch(() => {});}
       setMatches((prev) => prev + 1);
       setFirstCard(null);
       setLockBoard(false);
+
+      const id = Date.now();
+      setFloatingScores(prev => [
+        ...prev,
+        {
+          id,
+          cardId: card.id,
+          points: 50
+        }
+      ]);
+
+      setTimeout(() => {
+        setFloatingScores(prev =>
+          prev.filter(score => score.id !== id)
+        );
+      }, 1000);
     } else {
       setMistakes((prev) => prev + 1);
       setTimeout(() => {
@@ -247,38 +315,181 @@ function CardMatch() {
     }
   };
 
+  useEffect(() => {
+  if (gameState !== "countdown") return;
+
+  if (countdown > 0) {
+    if (countSoundRef.current) {
+      countSoundRef.current.currentTime = 0;
+      countSoundRef.current.play().catch(() => {});
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown(prev => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }
+
+  if (countdown === 0) {
+    if (startSoundRef.current) {
+      startSoundRef.current.currentTime = 0;
+      startSoundRef.current.play().catch(() => {});
+    }
+
+    const timer = setTimeout(() => {
+      setGameState("playing");
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }
+}, [countdown, gameState]);
+
+useEffect(() => {
+  if (musicRef.current)
+    musicRef.current.volume = 0.15;
+  
+  if (flipSoundRef.current)
+    flipSoundRef.current.volume = 0.25;
+
+  if (matchSoundRef.current)
+    matchSoundRef.current.volume = 0.35;
+
+  if (victorySoundRef.current)
+    victorySoundRef.current.volume = 0.5;
+
+  if (countSoundRef.current)
+    countSoundRef.current.volume = 0.25;
+
+  if (startSoundRef.current)
+    startSoundRef.current.volume = 0.25;
+
+  if (loseSoundRef.current)
+    loseSoundRef.current.volume = 0.25;
+}, []);
+
+useEffect(() => {
+  if (!musicRef.current) return;
+
+  if (
+    musicEnabled &&
+    gameState === "playing"
+  ) {
+    musicRef.current.play().catch(console.error);
+  } else {
+    musicRef.current.pause();
+  }
+}, [musicEnabled, gameState]);
+
   return (
     <div className="cardmatch-page">
-      <header className="cardmatch-header">
-        <button className="ghost-btn" onClick={() => navigate("/games")}>
-          <ArrowLeft size={16} /> Back to games
-        </button>
-        <div className="cardmatch-stats">
-          <div className="stat-chip">
-            <span className="stat-label">Progress:</span>
-            <span className="stat-value">
-              {matches}/{PAIR_COUNT}
-            </span>
-          </div>
-          <div className="stat-chip">
-            <span className="stat-label">Score</span>
-            <span className="stat-value">{displayScore}</span>
-          </div>
-          <div className="stat-chip">
-            <span className="stat-label">Mistakes</span>
-            <span className="stat-value">{mistakes}</span>
-          </div>
-          <div className="stat-chip">
-            <span className="stat-label">Time</span>
-            <span className="stat-value">{formatTime(timeLeft)}</span>
+      <audio ref={musicRef} src="/assets/audio/chill-music.mp3" loop/>
+      <audio ref={flipSoundRef}src="/assets/audio/flip.mp3"/>
+      <audio ref={matchSoundRef} src="/assets/audio/correct.mp3"/>
+      <audio ref={victorySoundRef} src="/assets/audio/victory.mp3"/>
+      <audio ref={countSoundRef} src="/assets/audio/countdown.mp3"/>
+      <audio ref={startSoundRef} src="/assets/audio/start.mp3"/>
+      <audio ref={loseSoundRef} src="/assets/audio/lose.mp3"/>
+      {gameState === "instructions" && (
+        <div className="overlay">
+          <div className="modal">
+            <h2>Card Match</h2>
+            <div className="instruction-subtitle">
+              Test your memory and find all matching pairs.
+            </div>
+            <div className="instruction-stats">
+              <div className="instruction-stat">
+                <span>12</span>
+                <small>Pairs</small>
+              </div>
+
+              <div className="instruction-stat">
+                <span>04:00</span>
+                <small>Time</small>
+              </div>
+
+              <div className="instruction-stat">
+                <span>2000</span>
+                <small>Max Score</small>
+              </div>
+            </div>
+            <div className="instructions-rules">
+              <div className="rule-item">
+                Remember the position of the cards and find all matching pairs before time runs out.
+              </div>
+              <div className="rule-item">
+                Each mistake reduces your score so take your time and think carefully.
+              </div>
+            </div>
+
+            <button style={{ marginTop: "1rem" }} className="ghost-btn"
+              onClick={() => { setCountdown(3); setGameState("countdown");}}>
+              <Play size={20} /> Start Game
+            </button>
           </div>
         </div>
-        <button className="ghost-btn" onClick={resetGame}>
-          <RotateCcw size={16} /> Restart
-        </button>
-      </header>
+      )}
+
+      {gameState === "countdown" && (
+        <div className="countdown-overlay">
+          <span
+            key={countdown}
+            className={`countdown-number ${
+              countdown === 0 ? "countdown-start" : ""
+            }`}>
+            {countdown === 0 ? "GO!" : countdown}
+          </span>
+        </div>
+      )}
+      {gameState === "paused" && (
+        <div className="overlay">
+          <div className="modal">
+            <h2>Game Paused</h2>
+            <div className="pause-actions">
+              <button className="ghost-btn" onClick={() => setGameState("playing")}>
+                <Play size={20} /> Resume
+              </button>
+              <button className="ghost-btn" onClick={resetGame}>
+                <RotateCcw size={20} /> Restart Game
+              </button>
+              <button className="ghost-btn" onClick={() => setMusicEnabled(prev => !prev)}>
+                <Music size={20} /> {musicEnabled ? "Disable Music" : "Enable Music"}
+              </button>
+              <button className="ghost-btn" onClick={() => navigate("/games")}>
+                <DoorOpen size={20} /> Exit game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="cardmatch-container">
+        <header className="cardmatch-header">
+          <button className="menu-btn" onClick={() => setGameState("paused")}>
+            <Menu size={24} />
+          </button>
+          <div className="cardmatch-stats">
+            <div className="stat-chip">
+              <span className="stat-label">Pairs found:</span>
+              <span className="stat-value">
+                {matches}/{PAIR_COUNT}
+              </span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-label">Score</span>
+              <span className="stat-value">{displayScore}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-label">Attempts</span>
+              <span className="stat-value">{moves}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-label">Time</span>
+              <span className="stat-value">{formatTime(timeLeft)}</span>
+            </div>
+          </div>
+        </header>
+
         <div className="cardmatch-shell">
           <div className="cardmatch-board two-rows">
             {cards.map((card) => (
@@ -303,24 +514,65 @@ function CardMatch() {
                   )}
                 </span>
                 <span className="card-back" />
+                {floatingScores.some(
+                  score => score.cardId === card.id
+                ) && (
+                  <div className="floating-score">
+                    Pair Found!
+                  </div>
+                )}
               </button>
             ))}
           </div>
         </div>
       </section>
 
+      {showFinish && finishReason === "win" && (
+        <Confetti
+          recycle={false}
+          numberOfPieces={300}
+        />
+      )}
+
       {showFinish && (
         <div className="finish-backdrop">
           <div className="finish-modal">
-            <div className="finish-icon">
-              <Trophy size={28} />
+           <div className="finish-icon">
+              {finishReason === "win" ? (
+                <Trophy size={64} />
+              ) : (
+                <ClockAlert size={64} />
+              )}
             </div>
-            <h2>Great job!</h2>
-            <p>
-              You matched all pairs in {formatTime(elapsed)} with {mistakes} mistake
-              {mistakes === 1 ? "" : "s"}.
-              You got {estimatedScore} for your performance.
-            </p>
+            <h2 className="finish-title">
+              {finishReason === "win" ? "Congratulations, you have found all pairs successfully!" : "Time's up! Better luck next time."}
+            </h2>
+            <div className="finish-score">
+              {displayScore}
+            </div>
+            <div className="finish-score-label">
+              POINTS
+            </div>
+            <div className="finish-stats">
+              <div className="finish-stat">
+                <span>{formatTime(elapsed)}</span>
+                <small>Time</small>
+              </div>
+
+              <div className="finish-stat">
+                <span>{mistakes}</span>
+                <small>Mistakes</small>
+              </div>
+
+              <div className="finish-stat">
+                {moves > 0 ? (
+                  <span>{Math.round((matches / moves) * 100)}%</span>
+                ) : (
+                  <span>0%</span>
+                )}
+                <small>Accuracy</small>
+              </div>
+            </div>
             {sessionStatus === "error" && (
               <p className="error-note">
                 We could not save your session. Try again or play another round.
@@ -328,14 +580,15 @@ function CardMatch() {
             )}
             <div className="finish-actions">
               <button className="ghost-btn" onClick={() => navigate("/games")}>
-                Back to games
+                <DoorOpen />Exit game
               </button>
               <button className="ghost-btn" onClick={resetGame}>
-                Play again
+                <Play />Play again
               </button>
             </div>
           </div>
         </div>
+        
       )}
     </div>
   );

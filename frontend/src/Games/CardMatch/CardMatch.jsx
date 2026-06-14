@@ -164,7 +164,7 @@ function CardMatch() {
     }
   };
 
-  const recordSession = useCallback(async () => {
+  const recordSession = useCallback(async (finalScore) => {
     if (sessionStatus === "saved" || !gameIdRef.current) return;
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -182,7 +182,7 @@ function CardMatch() {
           mistakes,
           started_at: startTimeRef.current,
           finished_at: new Date().toISOString(),
-          estimated_score: estimatedScore
+          estimated_score: finalScore
         }),
       });
 
@@ -199,8 +199,27 @@ function CardMatch() {
   }, [mistakes, sessionStatus]);
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && gameState === "playing") {
+        setGameState("paused");
+        return;
+      }
+
+      if (e.key === "Escape" && gameState === "paused") {
+        setGameState("playing");
+        return;
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [gameState]);
+
+  useEffect(() => {
   if (matches === PAIR_COUNT && !finishedRef.current) {
     finishedRef.current = true;
+    finalScoreRef.current = estimatedScore;
 
     setFinishReason("win");
     setShowFinish(true);
@@ -214,13 +233,14 @@ function CardMatch() {
       clearInterval(timerRef.current);
     }
 
-    recordSession();
+    recordSession(finalScoreRef.current);
   }
 }, [matches, recordSession]);
 
 useEffect(() => {
   if (timeLeft === 0 && !finishedRef.current) {
     finishedRef.current = true;
+    finalScoreRef.current = estimatedScore;
 
     setFinishReason("timeout");
     setShowFinish(true);
@@ -234,7 +254,7 @@ useEffect(() => {
       clearInterval(timerRef.current);
     }
 
-    recordSession();
+    recordSession(finalScoreRef.current);
   }
 }, [timeLeft, recordSession]);
 

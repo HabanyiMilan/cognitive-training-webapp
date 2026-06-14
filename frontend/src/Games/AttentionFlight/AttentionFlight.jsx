@@ -154,7 +154,7 @@ function generateRound() {
           setGameState("finished");
           setShowFinish(true);
           if (victorySoundRef.current) {victorySoundRef.current.currentTime = 0; victorySoundRef.current.play().catch(() => {});}
-          recordSession();
+          recordSession(score);
           return 0;
         }
 
@@ -199,10 +199,11 @@ function generateRound() {
   }
 }, [countdown, gameState]);
 
-const recordSession = useCallback(async () => {
+const recordSession = useCallback(async (finalScore) => {
     if (sessionStatus === "saved" || !gameIdRef.current) return;
     const token = localStorage.getItem("token");
     if (!token) return;
+    console.log( "Saving score:", finalScore);
 
     setSessionStatus("saving");
     try {
@@ -217,7 +218,7 @@ const recordSession = useCallback(async () => {
           mistakes: wrongAnswers,
           started_at: startTimeRef.current,
           finished_at: new Date().toISOString(),
-          estimated_score: score
+          estimated_score: finalScore
         }),
       });
 
@@ -256,8 +257,19 @@ const recordSession = useCallback(async () => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.key === "Escape" && gameState === "playing") {
+        setGameState("paused");
+        return;
+      }
+
+      if (e.key === "Escape" && gameState === "paused") {
+        setGameState("playing");
+        return;
+      }
+
       if (gameState !== "playing")
         return;
+
       let answer = null;
 
       if (e.key === "ArrowUp")
@@ -282,8 +294,13 @@ const recordSession = useCallback(async () => {
           showFeedback("correct", streakPoints);
           setCorrectAnswers( prev => prev + 1 );
           setScore(prev => {
-            const nextScore = prev + streakPoints;
-            return Math.min(nextScore, 2000);
+            const nextScore = Math.min(prev + streakPoints, 2000);
+            if (nextScore >= 2000) {
+              recordSession(2000);
+              setShowFinish(true);
+              setGameState("finished");
+            }
+            return nextScore;
           });
       } else {
         if (wrongSoundRef.current) {
@@ -325,7 +342,7 @@ const recordSession = useCallback(async () => {
     }
     setShowFinish(true);
     setGameState("finished");
-    recordSession();
+    recordSession(2000);
   }, [score]);
 
   useEffect(() => {

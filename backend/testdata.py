@@ -35,14 +35,14 @@ with app.app_context():
             icon_path="card-match.png",
         ),
         Game(
-            name="Attention Focus",
-            slug="attention-focus",
-            description="Sharpen your focus and attention with Attention Focus, a game that challenges you to quickly identify and respond to visual stimuli. Click on the correct shapes or colors as they appear on the screen. The faster and more accurately you respond, the higher your score will be.",
+            name="Attention Flight",
+            slug="attention-flight",
+            description="Sharpen your focus and attention with Attention Flight, a game that challenges you to quickly identify and respond to the planes direction with the arrow keys. The faster and more accurately you respond, the higher your score will be.",
             ability_type=AbilityType.ATTENTION,
-            difficulty=Difficulty.HARD,
+            difficulty=Difficulty.EASY,
             time_limit=60,
             max_score=2000,
-            icon_path="card-match.png",
+            icon_path="attention-flight.png",
         )
     ]
 

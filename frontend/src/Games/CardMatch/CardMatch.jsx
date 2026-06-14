@@ -254,9 +254,7 @@ useEffect(() => {
     }
   }, [showFinish, estimatedScore]);
 
-  const displayScore = showFinish
-    ? finalScoreRef.current
-    : estimatedScore;
+  const displayScore = showFinish ? finalScoreRef.current : estimatedScore;
     
   const handleCardClick = (card) => {
     if (gameState !== "playing" || lockBoard || card.matched || card.flipped) return;
@@ -558,12 +556,10 @@ useEffect(() => {
                 <span>{formatTime(elapsed)}</span>
                 <small>Time</small>
               </div>
-
               <div className="finish-stat">
                 <span>{mistakes}</span>
                 <small>Mistakes</small>
               </div>
-
               <div className="finish-stat">
                 {moves > 0 ? (
                   <span>{Math.round((matches / moves) * 100)}%</span>
@@ -588,7 +584,6 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Games from "./pages/Games"
 import CardMatch from "./Games/CardMatch/CardMatch";
 import LogicShift from "./Games/LogicShift/LogicShift";
+import AttentionFlight from "./Games/AttentionFlight/AttentionFlight";
 import Statistics from "./pages/Statistics";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             </ProtectedRoute>
         }>
           <Route path="games/card-match" element={<CardMatch />} />
+          <Route path="games/attention-flight" element={<AttentionFlight />} />
           <Route path="games/logic-shift" element={<LogicShift />} />
         </Route>
         <Route path="*" element={

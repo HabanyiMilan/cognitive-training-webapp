@@ -4,24 +4,43 @@ import Toast from "@/components/Toast.jsx";
 import { PlayIcon, TimerIcon, Brain, Eye, Handshake } from "lucide-react";
 import "../styles/Games.css";
 import "../styles/Index.css";
+import LoadingScreen from "../components/LoadingScreen.jsx";
 
 function Games() {
   const navigate = useNavigate();
   const [activeTag, setActiveTag] = useState("Memory");
   const [toast, setToast] = useState("");
   const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("");
   const handleStart = (game) => {
+    console.log("START CLICKED");
+    if (loading) return;
+    let path = "";
+    let text = "Loading...";
+
     if (game?.slug === "card-match") {
-      navigate("/games/card-match");
-      return;
-    } else if (game?.slug === "attention-flight") {
-      navigate("/games/attention-flight");
-      return;
-    } else if (game?.slug === "logic-shift") {
-      navigate("/games/logic-shift");
+      path = "/games/card-match";
+      text = "Shuffling Memory Sequences...";
+    } 
+    else if (game?.slug === "attention-flight") {
+      path = "/games/attention-flight";
+      text = "Preparing Attention Flight...";
+    } else if (game?.slug === "power-flow") {
+      path = "/games/power-flow";
+      text = "Setting up Power Flow...";
+    }
+
+    if (!path) {
+      setToast(`${game?.name ?? "Game"} launcher coming soon.`);
       return;
     }
-    setToast(`${game?.name ?? "Game"} launcher coming soon.`);
+    setLoading(true);
+    console.log("LOADING TRUE");
+    setLoadingText(text);
+    setTimeout(() => {
+      navigate(path);
+    }, 3000);
   };
   const abilityMap = {
     "Memory": "MEMORY",
@@ -42,6 +61,11 @@ function Games() {
     };
     fetchGames();
   }, [activeTag, "http://127.0.0.1:5000"]);
+
+  console.log("loading:", loading);
+  if (loading) {
+    return <LoadingScreen text={loadingText} />
+  }
 
   return (
     <div className="games-page">

@@ -9,8 +9,8 @@ import LandingPage from "./pages/LandingPage";
 import Profile from "./pages/Profile";
 import Games from "./pages/Games"
 import CardMatch from "./Games/CardMatch/CardMatch";
-import LogicShift from "./Games/LogicShift/LogicShift";
 import AttentionFlight from "./Games/AttentionFlight/AttentionFlight";
+import PowerFlow from "./Games/PowerFlow/PowerFlow";
 import Statistics from "./pages/Statistics";
 
 function App() {
@@ -43,7 +43,7 @@ function App() {
         }>
           <Route path="games/card-match" element={<CardMatch />} />
           <Route path="games/attention-flight" element={<AttentionFlight />} />
-          <Route path="games/logic-shift" element={<LogicShift />} />
+          <Route path="games/power-flow" element={<PowerFlow />} />
         </Route>
         <Route path="*" element={
           <PublicLayout>

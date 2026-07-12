@@ -44,8 +44,10 @@ function AttentionFlight() {
   const [centerDirection, setCenterDirection] = useState(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [highestStreak, setHighestStreak] = useState(0);
+  const streakRef = useRef(0);
   const [feedbacks, setFeedbacks] = useState([]);
   const [sessionStatus, setSessionStatus] = useState("idle");
+  const sessionSavedRef = useRef(false);
   const startTimeRef = useRef(null);
   const gameIdRef = useRef(null);
   const timeLimitRef = useRef(60);
@@ -82,7 +84,7 @@ function AttentionFlight() {
     }, []);
 
 function showFeedback(type, points = 0) {
-  const id = Date.now();
+  const id = Date.now() + Math.random();
 
   setFeedbacks(prev => [
     ...prev,
@@ -200,6 +202,8 @@ function generateRound() {
 }, [countdown, gameState]);
 
 const recordSession = useCallback(async (finalScore) => {
+    if ( sessionSavedRef.current || !gameIdRef.current) { return; }
+    sessionSavedRef.current = true;
     if (sessionStatus === "saved" || !gameIdRef.current) return;
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -246,6 +250,7 @@ const recordSession = useCallback(async (finalScore) => {
     setShowFinish(false);
     setPlanes([]);
     setCenterDirection(null);
+    streakRef.current = 0;
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -287,21 +292,21 @@ const recordSession = useCallback(async (finalScore) => {
             correctSoundRef.current.currentTime = 0;
             correctSoundRef.current.play().catch(() => {});
           }
-        const nextStreak = currentStreak + 1;
-          setCurrentStreak(nextStreak);
-          setHighestStreak(prev => Math.max(prev, nextStreak));
-          const streakPoints = Math.min(nextStreak * 10, 50);
-          showFeedback("correct", streakPoints);
-          setCorrectAnswers( prev => prev + 1 );
-          setScore(prev => {
-            const nextScore = Math.min(prev + streakPoints, 2000);
-            if (nextScore >= 2000) {
-              recordSession(2000);
-              setShowFinish(true);
-              setGameState("finished");
-            }
-            return nextScore;
-          });
+        streakRef.current++;
+        const nextStreak = streakRef.current;
+        setCurrentStreak(nextStreak);
+        setHighestStreak(prev => Math.max(prev, nextStreak));
+        const streakPoints = Math.min(nextStreak * 10, 50);
+        showFeedback("correct", streakPoints);
+        setCorrectAnswers(prev => prev + 1);
+        setScore(prev => {
+          const nextScore = Math.min(prev + streakPoints, 2000);
+          if (nextScore >= 2000) {
+            setShowFinish(true);
+            setGameState("finished");
+          }
+          return nextScore;
+        });
       } else {
         if (wrongSoundRef.current) {
             wrongSoundRef.current.currentTime = 0;
@@ -311,6 +316,7 @@ const recordSession = useCallback(async (finalScore) => {
         setWrongAnswers(
           prev => prev + 1
         );
+        streakRef.current = 0;
         setCurrentStreak(0);
         setScore(
           prev =>
@@ -422,7 +428,8 @@ const recordSession = useCallback(async (finalScore) => {
                 mistakes decrease score.
               </div>
             </div>
-            <button className="ghost-btn" onClick={() => {startTimeRef.current = new Date().toISOString(); setCountdown(3); setGameState("countdown");}}>
+            <button className="ghost-btn" onClick={() => {startTimeRef.current = new Date().toISOString();
+               streakRef.current = 0; setCurrentStreak(0); setHighestStreak(0); setCountdown(3); setGameState("countdown");}}>
               <Play size={20} />
               Start Game
             </button>

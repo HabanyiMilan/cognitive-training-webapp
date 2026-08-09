@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "@/components/Toast.jsx";
-import { PlayIcon, TimerIcon, Brain, Eye, Handshake } from "lucide-react";
+import { Brain, Eye, Handshake, Flame } from "lucide-react";
 import "../styles/Games.css";
 import "../styles/Index.css";
 import LoadingScreen from "../components/LoadingScreen.jsx";
@@ -11,6 +11,7 @@ function Games() {
   const [activeTag, setActiveTag] = useState("Memory");
   const [toast, setToast] = useState("");
   const [games, setGames] = useState([]);
+  const [popularGame, setPopularGame] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
   const handleStart = (game) => {
@@ -50,8 +51,18 @@ function Games() {
 
   useEffect(() => {
     const fetchGames = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+          console.error("No token found");
+          return;
+      }
       try {
-        const res = await fetch(`http://127.0.0.1:5000/games?ability=${abilityMap[activeTag]}`);
+        const res = await fetch(`http://127.0.0.1:5000/games?ability=${abilityMap[activeTag]}`,
+          {
+              headers: {
+                  Authorization: `Bearer ${token}`
+              }
+          });
         const data = await res.json();
         setGames(data?.games ?? []);
       } catch (err) {
@@ -62,69 +73,131 @@ function Games() {
     fetchGames();
   }, [activeTag, "http://127.0.0.1:5000"]);
 
+  useEffect(() =>{
+    const fetchPopularGame = async () => {
+      const token = localStorage.getItem("token")
+      if (!token) {
+          console.error("No token found");
+          return;
+      }
+      try {
+        const res = await fetch("http://127.0.0.1:5000/games/popular", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const data = await res.json();
+        setPopularGame(data?.popular_game ?? null);
+      } catch (err) {
+        console.error("Failed to find most popular game", err);
+        setPopularGame(null);
+      }
+    }; fetchPopularGame();
+  }, []);
+
   console.log("loading:", loading);
   if (loading) {
+    console.log("LoadingScreen rendered");
     return <LoadingScreen text={loadingText} />
   }
+
+  const currentGame = games[0];
 
   return (
     <div className="games-page">
       <Toast message={toast} onClose={() => setToast("")} />
-      <div className="games-header-container">
-        <section className="games-header">
-          <h1>Games</h1>
-          <p className="subtitle">
-            Train your cognitive skills with our fun and engaging games. Choose a category below to get started!
-          </p>
-          <div className="games-tabs">
-            {Object.keys(abilityMap).map((tag) => (
-              <button key={tag} className={`games-tab ${activeTag === tag ? "active" : ""}`} onClick={() => setActiveTag(tag)}>
-                {tag}
-              </button>
-            ))}
-          </div>
-        </section>
-      </div>
-      <section className="game-grid">
-        {games.map((game) => {
-          const abilityLabel = game.ability_type?.toLowerCase() === "memory" ? "Memory Boost"
-          : game.ability_type?.toLowerCase() === "problem_solving" ? "Problem Solving Boost"
-          : game.ability_type ? `${game.ability_type.charAt(0).toUpperCase()}${game.ability_type.slice(1)} Boost`
-          : "Boost";
-          const gamePillIcon = game.ability_type === "memory" ? <Brain size={24} /> : game.ability_type === "problem_solving" ? <Handshake size={24} /> : <Eye size={24} />;
-          const timeSeconds = Number(game.time_limit);
-          const timeDisplay = Number.isFinite(timeSeconds) ? `${Math.max(1, Math.round(timeSeconds / 60))} min` : game.time_limit;
 
-          return (
-            <article className="game-card" key={game.id || game.slug}>
-              <div className="game-card__body">
-                <h2 className="game-title">{game.name}</h2>
-                <div className="game-image">
-                  <img src={game?.icon_path ? `/src/assets/images/${game.icon_path}`  : "/src/assets/images/Home.png"} alt={game?.name}/>
-                </div>
-                <p className="game-desc">{game.description}</p>
-                <div className="game-meta">
-                  <div className="game-pill">
-                    {gamePillIcon}
-                    <span>{abilityLabel}</span>
+      <div className="games-panel">
+
+      <div className="games-header">
+        <h1>Games</h1>
+      </div>
+
+      <div className="games-layout">
+
+          {/* LEFT PANEL */}
+
+          <aside className="games-sidebar">
+
+              <h3>Categories</h3>
+
+              {Object.keys(abilityMap).map((tag) => {
+
+                  const icon =
+                      tag === "Memory"
+                          ? <Brain size={20}/>
+                          : tag === "Attention"
+                          ? <Eye size={20}/>
+                          : <Handshake size={20}/>;
+
+                  return (
+                      <button
+                          key={tag}
+                          className={`category-item ${
+                              activeTag === tag ? "active" : ""
+                          }`}
+                          onClick={() => setActiveTag(tag)}
+                      >
+                          {icon}
+
+                          <span>{tag}</span>
+                      </button>
+                  );
+              })}
+
+          </aside>
+
+          {/* RIGHT PANEL */}
+
+          {currentGame && (
+
+              <section className="game-details">
+
+                  <div className="hero-image">
+
+                      <img
+                          src={
+                              currentGame.icon_path
+                                  ? `/src/assets/images/${currentGame.icon_path}`
+                                  : "/src/assets/images/Home.png"
+                          }
+                          alt={currentGame.name}
+                      />
+
                   </div>
-                  <span className="meta">
-                    <TimerIcon size={16} />
-                    {timeDisplay}
-                  </span>
-                </div>
-                <div className="game-card__actions">
-                  <button className="start-btn" onClick={() => handleStart(game)}>
-                    <PlayIcon size={18} />
-                    Start Game
-                  </button>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </section>
-    </div>
+
+                  <h2 className="game-title">{currentGame.name}</h2>
+
+                  <p className="game-description">
+                      {currentGame.description}
+                  </p>
+
+                  <div className="game-footer">
+                    <div className="game-info">
+                        <div className="info-card">
+                            Difficulty: {currentGame.recommended_difficulty}
+                        </div>
+                        <div className="info-card">
+                            Last Played: {currentGame.last_played ? new Date(currentGame.last_played).toLocaleDateString() : "Never"}
+                        </div>
+                        {currentGame.id === popularGame?.id && (
+                          <div className="info-card">
+                              <Flame /> Popular Currently
+                          </div>
+                        )}
+                    </div>
+                    <button
+                        className="start-btn"
+                        onClick={() => handleStart(currentGame)}
+                    >
+                        Start Game
+                    </button>
+                  </div>
+              </section>
+          )}
+        </div>
+      </div>
+  </div>
   );
 }
 

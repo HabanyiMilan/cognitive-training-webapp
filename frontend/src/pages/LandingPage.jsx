@@ -4,6 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Toast from "../components/Toast";
 import "../styles/LandingPage.css";
+import game1 from "../assets/images/game1.png";
+import gamespage from "../assets/images/gamespage.png";
+import statisticspage from "../assets/images/statisticspage.png";
+import assessments from "../assets/images/assessments.png";
+import { Swiper, SwiperSlide } from "swiper/react";
+
+import { Autoplay } from "swiper/modules";
+
+import "swiper/css";
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -47,34 +56,71 @@ function LandingPage() {
   const handleError = () => {
     console.log("Google Login Failed");
   };
-
+  
   return (
     <div className="landing-wrapper">
       <Toast message={toast} onClose={() => setToast("")} />
       <div className="landing-card">
-        <img src="/src/assets/icons/Cognitra.png" alt="Cognitra Logo" className="landing-logo"/>
-        <div className="login-container">
-          <GoogleLogin
-            onSuccess={handleLoginSuccess}
-            onError={handleError}
-            logo_alignment="center"
-            shape="pill"
-            locale="en"
-          />
-        </div>
-        <div className="landing-text">
-          <p>
-            Cognitive abilities such as memory, attention, and problem-solving play a fundamental role
-            in everyday performance and long-term development. 
-            These mental processes determine how we process information, how quickly we react, 
-            and how effectively we make decisions.
+        <div className="landing-left">
+          <img src="/src/assets/icons/Cognitra.png" alt="Cognitra Logo" className="landing-logo"/>
+
+          <p className="landing-subtitle">
+            Your cognitive playground.
           </p>
 
-          <p>
-            Cognitra is designed to enhance memory, attention, and problem-solving skills through structured tasks,
-            while providing detailed statistical analysis to help you gain clear insight into your progress
-            and achieve better results.
+          <div className="login-container">
+            <GoogleLogin
+              onSuccess={handleLoginSuccess}
+              onError={handleError}
+              logo_alignment="center"
+              shape="pill"
+              locale="en"
+            />
+          </div>
+
+          <p className="landing-description">
+            Improve your memory, attention and problem-solving skills
+            through interactive games while tracking your progress.
           </p>
+        </div>
+
+        <div className="landing-right">
+          <Swiper
+            className="landing-swiper"
+            modules={[Autoplay]}
+            autoplay={{
+                delay: 5000,
+                disableOnInteraction: false,
+            }}
+            loop
+            speed={700}
+        >
+
+            <SwiperSlide>
+
+                <img src={game1} />
+
+            </SwiperSlide>
+
+            <SwiperSlide>
+
+                <img src={gamespage} />
+
+            </SwiperSlide>
+
+            <SwiperSlide>
+
+                <img src={statisticspage} />
+
+            </SwiperSlide>
+
+            <SwiperSlide>
+
+                <img src={assessments} />
+
+            </SwiperSlide>
+
+        </Swiper>
         </div>
       </div>
     </div>

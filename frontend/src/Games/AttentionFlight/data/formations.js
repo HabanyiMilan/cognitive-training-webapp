@@ -1,3 +1,30 @@
+export const EASY_FORMATIONS = [
+  // 3-as vízszintes
+  [
+    { x: 0, y: 0 },
+    { x: -180, y: 0 },
+    { x: 180, y: 0 },
+  ],
+  // 3-as függőleges
+  [
+    { x: 0, y: 0 },
+    { x: 0, y: -150 },
+    { x: 0, y: 150 },
+  ],
+  // fordított V
+  [
+    { x: 0, y: 0 },
+    { x: -70, y: 70 },
+    { x: 70, y: 70 },
+  ],
+  // V alak
+  [
+    { x: 0, y: 0 },
+    { x: -70, y: -70 },
+    { x: 70, y: -70 },
+  ]
+];
+
 export const FORMATIONS = [
 
   // Kereszt

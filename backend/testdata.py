@@ -1,6 +1,6 @@
 from database import db
 from app import create_app
-from models.game import Game, AbilityType, Difficulty
+from models.game import Game, AbilityType
 from models.user import User
 from models.session import Session
 from datetime import datetime, timedelta
@@ -19,7 +19,6 @@ with app.app_context():
             slug="card-match",
             description="Train your memory and concentration with Card Match, a classic card-pairing game where every move counts. Flip cards, remember their positions, and find matching pairs as quickly as possible. The fewer mistakes you make and the faster you finish, the better your score will be.",
             ability_type=AbilityType.MEMORY,
-            difficulty=Difficulty.EASY,
             time_limit=240,
             max_score=2000,
             icon_path="card-match.png",
@@ -29,7 +28,6 @@ with app.app_context():
             slug="power-flow",
             description="Challenge your problem-solving skills with Power Flow, a game that tests your ability to think critically. Connect the power lines to ensure electricity flows smoothly from the source to the destination. The faster and more efficiently you solve the puzzle, the higher your score will be.",
             ability_type=AbilityType.PROBLEM_SOLVING,
-            difficulty=Difficulty.MEDIUM,
             time_limit=180,
             max_score=2000,
             icon_path="power-flow.png",
@@ -39,13 +37,12 @@ with app.app_context():
             slug="attention-flight",
             description="Sharpen your focus and attention with Attention Flight, a game that challenges you to quickly identify and respond to the planes direction with the arrow keys. The faster and more accurately you respond, the higher your score will be.",
             ability_type=AbilityType.ATTENTION,
-            difficulty=Difficulty.EASY,
             time_limit=60,
             max_score=2000,
             icon_path="attention-flight.png",
         )
     ]
-
+    """
     for game in games:
         db.session.add(game)
 
@@ -105,8 +102,8 @@ with app.app_context():
 
     db.session.commit()
     print("Sessions inserted.")
-
-    """games = Game.query.all()
+    """
+    games = Game.query.all()
 
     my_user = User.query.filter_by(email="habanyim@gmail.com").first()
 
@@ -161,4 +158,4 @@ with app.app_context():
 
         db.session.commit()
 
-        print("Test user sessions inserted.") """
+        print("Test user sessions inserted.")

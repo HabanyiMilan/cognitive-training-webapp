@@ -150,11 +150,17 @@ function Assessment() {
         <img
           src="/src/assets/icons/Cognitra.png"
           alt="Cognitra Logo"
-          className="home-logo"
+          className="landing-logo"
         />
       {step === "method" && (
         <div className="assessment-title">
           <h2>Choose Assessment Method</h2>
+
+          <div className="assessment-text">
+            Before you start, we need to gather some information about your lifestyle and habits.
+            With the information we can give you feedback on your cognitive health and help you to improve it.
+            Please choose one of the following methods to provide this information.
+          </div>
           
           {importing ? (
             <div className="import-loading">
@@ -171,11 +177,6 @@ function Assessment() {
               </button>
             </div>
           )}
-          <div className="assessment-text">
-            Before you start, we need to gather some information about your lifestyle and habits.
-            With the information we can give you feedback on your cognitive health and help you to improve it.
-            Please choose one of the following methods to provide this information.
-          </div>
         </div>
       )}
       

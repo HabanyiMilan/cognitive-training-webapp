@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from services.auth_service import token_required
 from services.profile_service import get_profile
 from services.profile_service import delete_profile
@@ -26,5 +26,6 @@ from services.profile_service import get_week_activity
 @bp.route("/activity/week", methods=["GET"])
 @token_required
 def week_activity(current_user):
-    activity = get_week_activity(current_user.id)
+    offset = request.args.get("offset", default=0, type=int)
+    activity = get_week_activity(current_user.id, offset)
     return jsonify(activity)

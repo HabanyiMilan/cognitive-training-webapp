@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
+    "@mantine/carousel": "^9.5.1",
     "@react-oauth/google": "^0.13.4",
     "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^13.0.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.577.0",
     "motion": "^12.35.0",
@@ -24,6 +27,7 @@
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
     "recharts": "^3.8.1",
+    "swiper": "^14.0.7",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.167.1"

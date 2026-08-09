@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DoorOpen, RotateCcw, Trophy, Menu, Play, Music, ClockAlert } from "lucide-react";
+import { Menu } from "lucide-react";
 import Confetti from "react-confetti";
 import "@/Games/CardMatch/CardMatch.css";
+import "@/Games/results/Results.css";
+import gif1 from "../CardMatch/howToPlayImages/card-match-1.gif";
+import gif2 from "../CardMatch/howToPlayImages/card-match-2.gif";
+import gif3 from "../CardMatch/howToPlayImages/card-match-3.gif";
+import difficultyConfig from "./DifficultyConfig";
+import ResultInsights from "../results/ResultInsights.jsx";
+import ResultOverview from "../results/ResultOverview.jsx";
+import ResultProgress from "../results/ResultProgress.jsx";
 
 const API_BASE = "http://127.0.0.1:5000";
 
@@ -17,8 +25,6 @@ const IMAGE_FACES = Object.entries(
   };
 });
 
-const PAIR_COUNT = 12;
-
 function shuffle(list) {
   const arr = [...list];
   for (let i = arr.length - 1; i > 0; i -= 1) {
@@ -28,15 +34,15 @@ function shuffle(list) {
   return arr;
 }
 
-function getCardFaces() {
-  if (IMAGE_FACES.length < PAIR_COUNT) {
-    console.error(`Need at least ${PAIR_COUNT} images in Games/CardMatch/Images`);
+function getCardFaces(pairCount) {
+  if (IMAGE_FACES.length < pairCount) {
+    console.error(`Need at least ${pairCount} images in Games/CardMatch/Images`);
   }
-  return IMAGE_FACES.slice(0, PAIR_COUNT);
+  return IMAGE_FACES.slice(0, pairCount);
 }
 
-function createDeck() {
-  const faces = getCardFaces();
+function createDeck(pairCount) {
+  const faces = getCardFaces(pairCount);
   const doubled = faces.flatMap((face, idx) => {
     const baseId = `${face.label}-${idx}`;
     const matchKey = face.image ?? face.label;
@@ -63,7 +69,7 @@ function formatTime(seconds) {
 
 function CardMatch() {
   const navigate = useNavigate();
-  const [cards, setCards] = useState(() => createDeck());
+  const [cards, setCards] = useState([]);
   const [firstCard, setFirstCard] = useState(null);
   const [lockBoard, setLockBoard] = useState(false);
   const [matches, setMatches] = useState(0);
@@ -74,6 +80,7 @@ function CardMatch() {
   const [gameMeta, setGameMeta] = useState(null);
   const [sessionStatus, setSessionStatus] = useState("idle");
   const [gameState, setGameState] = useState("instructions");
+  const [tutorialStep, setTutorialStep] = useState(0);
   const [floatingScores, setFloatingScores] = useState([]);
   const [finishReason, setFinishReason] = useState(null); // "completed" or "timeout"
   const [musicEnabled, setMusicEnabled] = useState(true);
@@ -85,13 +92,26 @@ function CardMatch() {
   const victorySoundRef = useRef(null);
   const loseSoundRef = useRef(null);
   const [countdown, setCountdown] = useState(3);
-  const [moves, setMoves] = useState(0);
+  const [resultData, setResultData] = useState(null);
+  const [resultStep, setResultStep] = useState(0);
 
   const startTimeRef = useRef(new Date().toISOString());
   const finishedRef = useRef(false);
   const timerRef = useRef(null);
   const gameIdRef = useRef(null);
-  const timeLimitRef = useRef(300);
+  const timeLimitRef = useRef(180);
+
+  const config = difficultyConfig[gameMeta?.recommended_difficulty ?? "medium"];
+  const resultPages = ["overview", "progress", "insights"];
+
+  useEffect(() => {
+    if (!gameMeta) return;
+
+    setCards(createDeck(config.pairs));
+
+    setTimeLeft(config.time);
+    timeLimitRef.current = config.time;
+  }, [gameMeta]);
 
   useEffect(() => {
   if (gameState !== "playing") return;
@@ -122,7 +142,12 @@ function CardMatch() {
   useEffect(() => {
     const fetchGameMeta = async () => {
       try {
-        const res = await fetch(`${API_BASE}/games?ability=MEMORY`);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/games?ability=MEMORY`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         if (!res.ok) return;
         const data = await res.json();
         const cardMatch = data.games?.find((game) => game.slug === "card-match");
@@ -130,10 +155,9 @@ function CardMatch() {
           setGameMeta(cardMatch);
         }
         if (cardMatch?.id) gameIdRef.current = cardMatch.id;
-        if (cardMatch?.time_limit) {
-          const limit = Number(cardMatch.time_limit) || 300;
-          timeLimitRef.current = limit;
-          setTimeLeft(limit);
+        if (config.time) {
+          setTimeLeft(config.time);
+          timeLimitRef.current = config.time;
         }
       } catch (err) {
         console.error("Failed to fetch game metadata", err);
@@ -143,16 +167,16 @@ function CardMatch() {
   }, []);
 
   const resetGame = () => {
-    setCards(createDeck());
+    setCards(createDeck(config.pairs));
     setGameState("instructions");
     setFinishReason(null);
     setCountdown(3);
     setFirstCard(null);
     setLockBoard(false);
+    setTutorialStep(0);
     setMatches(0);
     setMistakes(0);
     setElapsed(0);
-    setMoves(0);
     setTimeLeft(timeLimitRef.current);
     setShowFinish(false);
     setSessionStatus("idle");
@@ -163,6 +187,21 @@ function CardMatch() {
       timerRef.current = null;
     }
   };
+
+  const tutorial = [
+  {
+      text: "Click on the cards to flip them. Your task will be to find the pair of each card.",
+      image: gif1
+  },
+  {
+      text: "Every incorrect attempts lowers your final score. Try to finish with less attempts for higher result.",
+      image: gif2
+  },
+  {
+      text: "The game will end once you find all pairs or if time runs out.",
+      image: gif3
+  }
+  ];
 
   const recordSession = useCallback(async (finalScore) => {
     if (sessionStatus === "saved" || !gameIdRef.current) return;
@@ -186,11 +225,15 @@ function CardMatch() {
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
         console.error("Failed to record session", await res.text());
         setSessionStatus("error");
         return;
       }
+      setResultData(data.result);
+      setResultStep(0);
       setSessionStatus("saved");
     } catch (err) {
       console.error("Failed to record session", err);
@@ -217,7 +260,7 @@ function CardMatch() {
   }, [gameState]);
 
   useEffect(() => {
-  if (matches === PAIR_COUNT && !finishedRef.current) {
+  if (matches === config.pairs && !finishedRef.current) {
     finishedRef.current = true;
     finalScoreRef.current = estimatedScore;
 
@@ -259,13 +302,11 @@ useEffect(() => {
 }, [timeLeft, recordSession]);
 
   const maxScore = gameMeta?.max_score || 2000;
-  const timeLimit = gameMeta?.time_limit || timeLimitRef.current;
+  const timeLimit = config.time || timeLimitRef.current;
   const timeFactor = Math.max(0, 1 - elapsed / timeLimit);
   const mistakeFactor = Math.max(0, 1 - mistakes / 30);
 
-  const estimatedScore = Math.floor(
-    maxScore * (0.6 * timeFactor + 0.4 * mistakeFactor)
-  );
+  const estimatedScore = Math.floor(maxScore * (0.6 * timeFactor + 0.4 * mistakeFactor));
 
   const finalScoreRef = useRef(null);
   useEffect(() => {
@@ -288,7 +329,6 @@ useEffect(() => {
     }
 
     setLockBoard(true);
-    setMoves(prev => prev + 1);
     const isMatch = firstCard.value === card.value;
 
     if (isMatch) {
@@ -409,43 +449,37 @@ useEffect(() => {
       <audio ref={startSoundRef} src="/assets/audio/start.mp3"/>
       <audio ref={loseSoundRef} src="/assets/audio/lose.mp3"/>
       {gameState === "instructions" && (
-        <div className="overlay">
-          <div className="modal">
-            <h2>Card Match</h2>
-            <div className="instruction-subtitle">
-              Test your memory and find all matching pairs.
-            </div>
-            <div className="instruction-stats">
-              <div className="instruction-stat">
-                <span>12</span>
-                <small>Pairs</small>
-              </div>
+      <div className="overlay">
+        <div className="modal">
+          <h2>How To Play</h2>
+          <img src={tutorial[tutorialStep].image} className="tutorial-image"/>
+          <p className="instruction-subtitle">
+            {tutorial[tutorialStep].text}
+          </p>
 
-              <div className="instruction-stat">
-                <span>04:00</span>
-                <small>Time</small>
-              </div>
+          <div className="tutorial-progress">
+            {tutorial.map((_, index) => (<span key={index} className={ index === tutorialStep ? "active-dot" : ""}/>))}
+          </div>
 
-              <div className="instruction-stat">
-                <span>2000</span>
-                <small>Max Score</small>
-              </div>
-            </div>
-            <div className="instructions-rules">
-              <div className="rule-item">
-                Remember the position of the cards and find all matching pairs before time runs out.
-              </div>
-              <div className="rule-item">
-                Each mistake reduces your score so take your time and think carefully.
-              </div>
-            </div>
+          <div className="tutorial-buttons">
+              {tutorialStep > 0 && (
+                  <button className="back" onClick={() => setTutorialStep(prev => prev - 1)}>
+                    Back
+                  </button>
+              )}
 
-            <button style={{ marginTop: "1rem" }} className="ghost-btn"
-              onClick={() => { setCountdown(3); setGameState("countdown");}}>
-              <Play size={20} /> Start Game
-            </button>
+              {tutorialStep < tutorial.length - 1 ? (
+                  <button className="next" onClick={() => setTutorialStep(prev => prev + 1)}>
+                    Next
+                  </button>
+              ) : (
+                  <button className="understand" onClick={() => {setCountdown(3); setGameState("countdown")}}>
+                    I Understand & Start Game
+                  </button>
+              )}
           </div>
         </div>
+      </div>
       )}
 
       {gameState === "countdown" && (
@@ -461,20 +495,20 @@ useEffect(() => {
       )}
       {gameState === "paused" && (
         <div className="overlay">
-          <div className="modal">
+          <div className="pause-modal">
             <h2>Game Paused</h2>
             <div className="pause-actions">
               <button className="ghost-btn" onClick={() => setGameState("playing")}>
-                <Play size={20} /> Resume
+                Resume
               </button>
               <button className="ghost-btn" onClick={resetGame}>
-                <RotateCcw size={20} /> Restart Game
+                Restart Game
               </button>
               <button className="ghost-btn" onClick={() => setMusicEnabled(prev => !prev)}>
-                <Music size={20} /> {musicEnabled ? "Disable Music" : "Enable Music"}
+                {musicEnabled ? "Disable Music" : "Enable Music"}
               </button>
               <button className="ghost-btn" onClick={() => navigate("/games")}>
-                <DoorOpen size={20} /> Exit game
+                Exit game
               </button>
             </div>
           </div>
@@ -483,25 +517,21 @@ useEffect(() => {
 
       <section className="cardmatch-container">
         <header className="cardmatch-header">
-          <button className="menu-btn" onClick={() => setGameState("paused")}>
+          <button className="pause-menu-btn" onClick={() => setGameState("paused")}>
             <Menu size={24} />
           </button>
           <div className="cardmatch-stats">
-            <div className="stat-chip">
-              <span className="stat-label">Pairs found:</span>
+            <div className="stat-chip-card">
+              <span className="stat-label">Pairs found</span>
               <span className="stat-value">
-                {matches}/{PAIR_COUNT}
+                {matches}/{config.pairs}
               </span>
             </div>
-            <div className="stat-chip">
+            <div className="stat-chip-card">
               <span className="stat-label">Score</span>
               <span className="stat-value">{displayScore}</span>
             </div>
-            <div className="stat-chip">
-              <span className="stat-label">Attempts</span>
-              <span className="stat-value">{moves}</span>
-            </div>
-            <div className="stat-chip">
+            <div className="stat-chip-card">
               <span className="stat-label">Time</span>
               <span className="stat-value">{formatTime(timeLeft)}</span>
             </div>
@@ -509,7 +539,9 @@ useEffect(() => {
         </header>
 
         <div className="cardmatch-shell">
-          <div className="cardmatch-board two-rows">
+          <div className="cardmatch-board" style={{
+                "--columns": config.columns
+            }}>
             {cards.map((card) => (
               <button
                 key={card.id}
@@ -552,55 +584,46 @@ useEffect(() => {
         />
       )}
 
-      {showFinish && (
-        <div className="finish-backdrop">
-          <div className="finish-modal">
-           <div className="finish-icon">
-              {finishReason === "win" ? (
-                <Trophy size={64} />
-              ) : (
-                <ClockAlert size={64} />
+      {showFinish && resultData && (
+        <div className="result-overlay">
+          <div className="result-modal">
+            <div className="result-content">
+              {resultStep === 0 && (
+                <ResultOverview result={resultData} />
+              )}
+              {resultStep === 1 && (
+                <ResultProgress result={resultData} />
+              )}
+              {resultStep === 2 && (
+                <ResultInsights result={resultData} />
               )}
             </div>
-            <h2 className="finish-title">
-              {finishReason === "win" ? "Congratulations, you have found all pairs successfully!" : "Time's up! Better luck next time."}
-            </h2>
-            <div className="finish-score">
-              {displayScore}
+            <div className="result-progress">
+              {resultPages.map((_, index) => (
+                <span key={index} className={index === resultStep ? "active-dot" : ""}/>
+              ))}
             </div>
-            <div className="finish-score-label">
-              POINTS
-            </div>
-            <div className="finish-stats">
-              <div className="finish-stat">
-                <span>{formatTime(elapsed)}</span>
-                <small>Time</small>
-              </div>
-              <div className="finish-stat">
-                <span>{mistakes}</span>
-                <small>Mistakes</small>
-              </div>
-              <div className="finish-stat">
-                {moves > 0 ? (
-                  <span>{Math.round((matches / moves) * 100)}%</span>
-                ) : (
-                  <span>0%</span>
-                )}
-                <small>Accuracy</small>
-              </div>
-            </div>
-            {sessionStatus === "error" && (
-              <p className="error-note">
-                We could not save your session. Try again or play another round.
-              </p>
-            )}
-            <div className="finish-actions">
-              <button className="ghost-btn" onClick={() => navigate("/games")}>
-                <DoorOpen />Exit game
-              </button>
-              <button className="ghost-btn" onClick={resetGame}>
-                <Play />Play again
-              </button>
+            <div className="result-buttons">
+              {resultStep > 0 && (
+                <button className="result-back" onClick={() => setResultStep(prev => prev - 1)}>
+                  Back
+                </button>
+              )}
+              {resultStep < resultPages.length - 1 ? (
+                <button className="result-next" onClick={() => setResultStep(prev => prev + 1)}>
+                  Next
+                </button>
+              ) : (
+                <div className="result-final-actions">
+                  <button className="result-primary" onClick={resetGame}>
+                    Play Again
+                  </button>
+                  
+                  <button className="result-secondary" onClick={() => navigate("/games")}>
+                    Exit Game
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,8 +1,9 @@
 import "../styles/LoadingScreen.css";
 import FloatingLines from "@/components/FloatingLines";
+import { createPortal } from "react-dom";
 
 function LoadingScreen({ text = "Initializing..." }) {
-  return (
+  return createPortal(
     <div className="loading-screen">
       <div className="wallpaper2-bg">
         <FloatingLines
@@ -27,7 +28,8 @@ function LoadingScreen({ text = "Initializing..." }) {
         </div>
 
       </div>
-    </div>
+    </div>, 
+    document.body
   );
 }
 

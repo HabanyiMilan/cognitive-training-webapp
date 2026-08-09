@@ -1,7 +1,7 @@
 // Második pálya
 export default {
     id: 2,
-    optimalRotations: 10,
+    optimalRotations: 7,
     grid: [
       [{
       type: "corner",

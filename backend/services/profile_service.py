@@ -58,16 +58,21 @@ def delete_profile(user_id):
     return True
 
 from services.statistics_service import get_activity_calendar
-def get_week_activity(user_id: int):
+def get_week_activity(user_id: int, offset: int = 0):
+    offset = min(offset, 0)
+
     today = datetime.utcnow().date()
-    start_of_week = today - timedelta(days=today.weekday())
+
+    current_week = today - timedelta(days=today.weekday())
+
+    start_of_week = current_week + timedelta(weeks=offset)
+
+    end_of_week = start_of_week + timedelta(days=6)
     
     calendar = get_activity_calendar(user_id)
 
     played_days = {
-        entry["date"]
-        for entry in calendar
-        if start_of_week <= datetime.fromisoformat(entry["date"]).date() <= today
+        entry["date"]: entry["count"] for entry in calendar
     }
 
     week = []
@@ -76,7 +81,15 @@ def get_week_activity(user_id: int):
         iso = day.isoformat()
         week.append({
             "date": iso,
-            "played": iso in played_days
+            "played": iso in played_days,
+            "count": played_days.get(iso, 0),
+            "future": day > today,
+            "today": day == today
         })
 
-    return week
+    return {
+        "week_start": start_of_week.isoformat(),
+        "week_end": end_of_week.isoformat(),
+        "offset": offset,
+        "days":week
+        }

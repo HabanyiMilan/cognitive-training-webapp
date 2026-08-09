@@ -9,19 +9,19 @@ const formatTime = (seconds) => {
 function HUD ({ score, timeLeft, rotations, onPause }) {
     return (
         <header className="powerflow-header">
-            <button className="menu-btn" onClick={onPause}>
+            <button className="pause-menu-btn" onClick={onPause}>
                 <Menu size={24} />
             </button>
             <div className="powerflow-stats">
-                <div className="stat-chip">
+                <div className="stat-chip-card">
                     <span className="stat-label">Score</span>
                     <span className="stat-value">{score}</span>
                 </div>
-                <div className="stat-chip">
+                <div className="stat-chip-card">
                     <span className="stat-label">Time Left</span>
                     <span className="stat-value">{formatTime(timeLeft)}</span>
                 </div>
-                <div className="stat-chip">
+                <div className="stat-chip-card">
                     <span className="stat-label">Rotations</span>
                     <span className="stat-value">{rotations}</span>
                 </div>

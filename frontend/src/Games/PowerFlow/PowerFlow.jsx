@@ -1,10 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play, Trophy, ClockAlert, DoorOpen, RotateCcw, Music } from "lucide-react";
+import { Play } from "lucide-react";
 import Confetti from "react-confetti";
 import HUD from "./components/HUD";
 import Board from "./components/Board";
 import { boards } from "./data/boards";
+import ResultInsights from "../results/ResultInsights.jsx";
+import ResultOverview from "../results/ResultOverview.jsx";
+import ResultProgress from "../results/ResultProgress.jsx";
+
+import gif1 from "../PowerFlow/howToPlayImages/power-flow-1.gif";
+import gif2 from "../PowerFlow/howToPlayImages/power-flow-2.gif";
+import gif3 from "../PowerFlow/howToPlayImages/power-flow-3.gif";
+
+import "@/Games/results/Results.css";
 import "@/Games/PowerFlow/PowerFlow.css";
 import "@/Games/CardMatch/CardMatch.css";
 import { isSolved, updatePowered, getWinningPath } from "./utils/checkConnections";
@@ -41,15 +50,14 @@ function PowerFlow() {
     const gameIdRef = useRef(null);
     const startTimeRef = useRef(null);
     const timeLimitRef = useRef(180);
+    const [resultStep, setResultStep] = useState(0);
+    const [resultData, setResultData] = useState(null);
+    const [tutorialStep, setTutorialStep] = useState(0);
 
     const [mistakes, setMistakes] = useState(0);
     const [sessionStatus, setSessionStatus] = useState("idle");
 
-    const formatTime = (seconds) => {
-        const min = Math.floor(seconds / 60);
-        const sec = seconds % 60;
-        return `${min}:${String(sec).padStart(2,"0")}`;
-    };
+    const resultPages = ["overview", "progress", "insights"];
     
     const calculateScore = (time, rotations) => {
         const base = 2000;
@@ -68,7 +76,12 @@ function PowerFlow() {
       useEffect(() => {
         const fetchGameMeta = async () => {
           try {
-            const res = await fetch(`${API_BASE}/games?ability=PROBLEM_SOLVING`);
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/games?ability=PROBLEM_SOLVING`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             if (!res.ok) return;
             const data = await res.json();
             const powerFlow = data.games?.find((game) => game.slug === "power-flow");
@@ -106,12 +119,17 @@ function PowerFlow() {
                 estimated_score: finalScore
               }),
             });
+
+            const data = await res.json();
       
             if (!res.ok) {
               console.error("Failed to record session", await res.text());
               setSessionStatus("error");
               return;
             }
+            console.log("Session saved:", data);
+            setResultData(data.result);
+            setResultStep(0);
             setSessionStatus("saved");
           } catch (err) {
             console.error("Failed to record session", err);
@@ -209,7 +227,24 @@ function PowerFlow() {
         setMistakes(0);
         setSessionStatus("idle");
         startTimeRef.current = null;
+        setTutorialStep(0);
+        setResultData(null);
     };
+
+    const tutorial = [
+      {
+          text: "Click on the wires to flip them. Your task will be to find the optimal way from start to finish battery.",
+          image: gif1
+      },
+      {
+          text: "Be carefull, if you rotate more than the optimal solutions, you will start to lose points. Try to find the optimal solution for higher result.",
+          image: gif2
+      },
+      {
+          text: "The game will end once the wires connect the start and finish battery or if time runs out.",
+          image: gif3
+      }
+      ];
 
     useEffect(() => {
         if (gameState !== "countdown") return;
@@ -312,44 +347,40 @@ function PowerFlow() {
       <audio ref={loseSoundRef} src="/assets/audio/lose.mp3"/>
       <audio ref={powerSoundRef} src="/assets/audio/power.mp3"/>
       <audio ref={turnSoundRef} src="/assets/audio/turn.mp3"/>
-        {gameState === "instructions" && (
+      {gameState === "instructions" && (
         <div className="overlay">
           <div className="modal">
-            <h2>Power Flow</h2>
-            <div className="instruction-subtitle">
-                Connect the power lines to ensure electricity flows smoothly from the source to the destination. The faster and more efficiently you solve the puzzle, the higher your score will be.
-            </div>
-            <div className="instruction-stats">
-              <div className="instruction-stat">
-                <span>03:00</span>
-                <small>Time</small>
-              </div>
-              <div className="instruction-stat">
-                <span>2000</span>
-                <small>Max Score</small>
-              </div>
-              <div className="instruction-stat">
-                <span>6x6</span>
-                <small>Board Size</small>
-              </div>
-            </div>
-            <div className="instructions-rules">
-              <div className="rule-item">
-                Click on the tiles to rotate them and connect the power lines from the source to the destination.
-              </div>
-              <div className="rule-item">
-                The game is timed, and you have 3 minutes to complete the puzzle. The faster you complete it, the higher your score.
-              </div>
+            <h2>How To Play</h2>
+            <img src={tutorial[tutorialStep].image} className="tutorial-image"/>
+            <p className="instruction-subtitle">
+              {tutorial[tutorialStep].text}
+            </p>
+
+            <div className="tutorial-progress">
+              {tutorial.map((_, index) => (<span key={index} className={ index === tutorialStep ? "active-dot" : ""}/>))}
             </div>
 
-            <button style={{ marginTop: "1rem" }} className="ghost-btn"
-              onClick={() => { setCountdown(3); setGameState("countdown");}}>
-              <Play size={20} /> Start Game
-            </button>
+            <div className="tutorial-buttons">
+                {tutorialStep > 0 && (
+                    <button className="back" onClick={() => setTutorialStep(prev => prev - 1)}>
+                      Back
+                    </button>
+                )}
+
+                {tutorialStep < tutorial.length - 1 ? (
+                    <button className="next" onClick={() => setTutorialStep(prev => prev + 1)}>
+                      Next
+                    </button>
+                ) : (
+                    <button className="understand" onClick={() => {setCountdown(3); setGameState("countdown")}}>
+                      I Understand & Start Game
+                    </button>
+                )}
+            </div>
           </div>
         </div>
-      )}
-        {gameState === "countdown" && (
+        )}
+      {gameState === "countdown" && (
         <div className="countdown-overlay">
           <span
             key={countdown}
@@ -359,82 +390,81 @@ function PowerFlow() {
             {countdown === 0 ? "GO!" : countdown}
           </span>
         </div>
-        )}
-        {gameState === "paused" && (
+      )}
+      {gameState === "paused" && (
         <div className="overlay">
-          <div className="modal">
+          <div className="pause-modal">
             <h2>Game Paused</h2>
             <div className="pause-actions">
               <button className="ghost-btn" onClick={() => setGameState("playing")}>
-                <Play size={20} /> Resume
+                Resume
               </button>
               <button className="ghost-btn" onClick={resetGame}>
-                <RotateCcw size={20} /> Restart Game
+                Restart Game
               </button>
               <button className="ghost-btn" onClick={() => setMusicEnabled(prev => !prev)}>
-                <Music size={20} /> {musicEnabled ? "Disable Music" : "Enable Music"}
+                {musicEnabled ? "Disable Music" : "Enable Music"}
               </button>
               <button className="ghost-btn" onClick={() => navigate("/games")}>
-                <DoorOpen size={20} /> Exit game
+                Exit game
               </button>
             </div>
           </div>
         </div>
-        )}
-        <section className="powerflow-container">
-            <HUD score={score} timeLeft={timeLeft} rotations={rotations} onPause={() => setGameState("paused")}/>
-            <div className="powerflow-shell">
-              <Board board={board} onRotate={rotateWire} animationPath={animationPath} animationIndex={animationIndex} />
-            </div>
-        </section>
+      )}
+      <section className="powerflow-container">
+          <HUD score={score} timeLeft={timeLeft} rotations={rotations} onPause={() => setGameState("paused")}/>
+          <div className="powerflow-shell">
+            <Board board={board} onRotate={rotateWire} animationPath={animationPath} animationIndex={animationIndex} />
+          </div>
+      </section>
+      {showFinish && finishReason === "win" && (
+        <Confetti
+          recycle={false}
+          numberOfPieces={300}
+        />
+      )}
 
-        {showFinish && finishReason === "win" && (
-          <Confetti
-            recycle={false}
-            numberOfPieces={300}
-          />
-        )}
-
-        {showFinish && (
-        <div className="finish-backdrop">
-          <div className="finish-modal">
-           <div className="finish-icon">
-              {finishReason === "win" ? (
-                <Trophy size={64} />
-              ) : (
-                <ClockAlert size={64} />
+      {showFinish && resultData && (
+        <div className="result-overlay">
+          <div className="result-modal">
+            <div className="result-content">
+              {resultStep === 0 && (
+                <ResultOverview result={resultData} />
+              )}
+              {resultStep === 1 && (
+                <ResultProgress result={resultData} />
+              )}
+              {resultStep === 2 && (
+                <ResultInsights result={resultData} />
               )}
             </div>
-            <h2 className="finish-title">
-              {finishReason === "win" ? "Congratulations, you have found the optimal solution!" : "Time's up! Better luck next time."}
-            </h2>
-            <div className="finish-score">
-              {score}
+            <div className="result-progress">
+              {resultPages.map((_, index) => (
+                <span key={index} className={index === resultStep ? "active-dot" : ""}/>
+              ))}
             </div>
-            <div className="finish-score-label">
-              POINTS
-            </div>
-            <div className="finish-stats">
-              <div className="finish-stat">
-                  <span>{formatTime(elapsed)}</span>
-                  <small>Time</small>
-              </div>
-              <div className="finish-stat">
-                  <span>{rotations}</span>
-                  <small>Your Rotations</small>
-              </div>
-              <div className="finish-stat">
-                  <span>{optimalRotations}</span>
-                  <small>Optimal Rotations</small>
-              </div>
-          </div>
-            <div className="finish-actions">
-              <button className="ghost-btn" onClick={() => navigate("/games")}>
-                <DoorOpen />Exit game
-              </button>
-              <button className="ghost-btn" onClick={resetGame}>
-                <Play />Play again
-              </button>
+            <div className="result-buttons">
+              {resultStep > 0 && (
+                <button className="result-back" onClick={() => setResultStep(prev => prev - 1)}>
+                  Back
+                </button>
+              )}
+              {resultStep < resultPages.length - 1 ? (
+                <button className="result-next" onClick={() => setResultStep(prev => prev + 1)}>
+                  Next
+                </button>
+              ) : (
+                <div className="result-final-actions">
+                  <button className="result-primary" onClick={resetGame}>
+                    Play Again
+                  </button>
+                  
+                  <button className="result-secondary" onClick={() => navigate("/games")}>
+                    Exit Game
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

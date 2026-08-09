@@ -437,3 +437,271 @@ def analyze_with_progress(user_id, ability_type, retries=10):
         "analysis": parsed,
         "progress": progress
     }
+
+from services.assessment_service import get_assessment_insights
+def get_session_result_statistics(user_id: int, session_id: int):
+    session = (Session.query.filter(Session.id == session_id, Session.user_id == user_id).first())
+    if not session:
+        return None
+    game = Game.query.get(session.game_id)
+    if not game:
+        return None
+    
+    # jelenlegi eredmények
+    current_score = session.score or 0
+    current_time = 0
+    if session.started_at and session.finished_at:
+        current_time = int((session.finished_at - session.started_at).total_seconds())
+
+    # korábbi sessionok
+    previous_sessions = (
+        Session.query
+        .filter(
+            Session.user_id == user_id,
+            Session.game_id == session.game_id,
+            Session.id != session.id,
+            Session.finished_at.isnot(None)
+        )
+        .order_by(Session.finished_at.desc())
+        .all()
+    )
+
+    # eredmények
+    previous_scores = [s.score or 0 for s in previous_sessions if s.score is not None]
+    average_score = (sum(previous_scores) / len(previous_scores) if previous_scores else None)
+    previous_best = (max(previous_scores) if previous_scores else None)
+    personal_best = max(current_score, previous_best or 0)
+    previous_mistakes = [s.mistakes or 0 for s in previous_sessions if s.mistakes is not None]
+    average_mistakes = (int(sum(previous_mistakes) / len(previous_mistakes)) if previous_mistakes else None)
+    lowest_mistakes = (min(previous_mistakes) if previous_mistakes else None)
+    score_delta = None
+    score_delta_percent = None
+    if average_score and average_score > 0:
+        score_delta = (current_score - average_score)
+        score_delta_percent = (score_delta / average_score) * 100
+    is_new_personal_best = (previous_best is None or current_score > previous_best)
+
+    # idő
+    previous_times = []
+    for s in previous_sessions:
+        if s.started_at and s.finished_at:
+            duration = int((s.finished_at - s.started_at).total_seconds())
+            if duration > 0:
+                previous_times.append(duration)
+    average_time = (
+        int(sum(previous_times) / len(previous_times))
+        if previous_times
+        else None
+    )
+    best_time = (min(previous_times) if previous_times else None)
+    time_delta = None
+    if average_time is not None:
+        time_delta = current_time - average_time
+
+    # összehasonlítás többi játékos eredményeivel az adott játékban
+    global_average = (
+        db.session.query(func.avg(Session.score))
+        .filter(
+            Session.game_id == session.game_id
+        )
+        .scalar()
+        or 0
+    )
+    global_comparison = (current_score - global_average if global_average else 0)
+
+    # játékos összehasonlítása százalékosan a többi játékoshoz képest
+    percentile = get_game_percentile(user_id, session.game_id, current_score)
+
+    # ajánlások
+    insights = []
+    assessment_insights = get_assessment_insights(user_id, session.game_id)
+    training_insights = get_training_habit_insights(user_id, session.game_id)
+    insights = (assessment_insights + training_insights)
+
+    # trend(az utolsó 10 játékról)
+    trend = get_game_score_trend(user_id, session.game_id)
+
+    return {
+        "session": {
+            "id": session.id,
+            "game_id": session.game_id,
+            "game_name": game.name,
+            "ability_type": (
+                game.ability_type.value
+                if game.ability_type
+                else None
+            )
+        },
+        "mistakes":{
+            "current": session.mistakes or 0,
+            "average": int(average_mistakes),
+            "lowest_mistakes": lowest_mistakes,
+        },
+
+        "score": {
+            "current": int(current_score),
+            "average": (
+                int(average_score)
+                if average_score is not None
+                else None
+            ),
+            "best": personal_best,
+            "previous_best": previous_best,
+            "delta": (
+                int(score_delta)
+                if score_delta is not None
+                else None
+            ),
+            "delta_percent": (
+                round(score_delta_percent, 1)
+                if score_delta_percent is not None
+                else None
+            ),
+            "new_personal_best": is_new_personal_best
+        },
+
+        "time": {
+            "current": current_time,
+            "average": average_time,
+            "best": best_time,
+            "delta": time_delta
+        },
+
+        "comparison": {
+            "global_average": int(global_average),
+            "difference": int(global_comparison),
+            "percentile": percentile
+        },
+
+        "insights": insights,
+        "trend": trend
+    }
+
+def get_game_percentile(user_id: int, game_id: int, score: int):
+    scores = (
+        db.session.query(Session.score)
+        .filter(
+            Session.game_id == game_id,
+            Session.score.isnot(None)
+        )
+        .all()
+    )
+    values = sorted(score[0] for score in scores)
+    if not values:
+        return 0
+    below_or_equal = sum(1 for value in values if value <= score)
+
+    return int((below_or_equal / len(values)) * 100)
+
+
+def get_game_score_trend(user_id: int, game_id: int, limit: int = 10):
+    sessions = (
+        Session.query
+        .filter(
+            Session.user_id == user_id,
+            Session.game_id == game_id,
+            Session.finished_at.isnot(None)
+        )
+        .order_by(Session.finished_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    sessions.reverse()
+
+    results = []
+
+    for index, session in enumerate(sessions, start=1):
+
+        global_average = (
+            db.session.query(func.avg(Session.score))
+            .filter(
+                Session.game_id == game_id,
+                Session.user_id != user_id,
+                Session.finished_at <= session.finished_at
+            )
+            .scalar()
+        )
+        results.append({
+                "attempt": index,
+                "date": session.finished_at.isoformat(),
+                "score": session.score or 0,
+                "players_average": int(global_average or 0)
+            })
+
+    return results
+
+def get_training_habit_insights(user_id: int, game_id: int):
+
+    sessions = (
+        Session.query
+        .filter(
+            Session.user_id == user_id,
+            Session.game_id == game_id,
+            Session.finished_at.isnot(None)
+        )
+        .order_by(Session.finished_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    if len(sessions) < 3:
+        return []
+
+    insights = []
+
+    recent_sessions = sessions[:5]
+
+    consecutive_sessions = 1
+
+    for i in range(len(recent_sessions) - 1):
+
+        gap = (
+            recent_sessions[i].finished_at -
+            recent_sessions[i + 1].finished_at
+        ).total_seconds()
+
+        if gap <= 15 * 60:
+            consecutive_sessions += 1
+        else:
+            break
+
+    if consecutive_sessions >= 3:
+
+        recent_scores = [
+            s.score or 0
+            for s in recent_sessions
+        ]
+
+        first_half = recent_scores[:2]
+        second_half = recent_scores[-2:]
+
+        if first_half and second_half:
+
+            first_avg = sum(first_half) / len(first_half)
+            second_avg = sum(second_half) / len(second_half)
+
+            if second_avg < first_avg:
+
+                insights.append({
+                    "type": "warning",
+                    "title": "Possible Fatigue",
+                    "text": (
+                        f"Your recent scores decreased after "
+                        f"{consecutive_sessions} sessions with short breaks. "
+                        "Consider taking a short break before continuing."
+                    )
+                })
+
+            else:
+
+                insights.append({
+                    "type": "neutral",
+                    "title": "Consistent Training",
+                    "text": (
+                        f"You completed {consecutive_sessions} sessions "
+                        "with short breaks while maintaining your performance."
+                    )
+                })
+
+    return insights

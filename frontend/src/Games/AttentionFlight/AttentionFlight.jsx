@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { DoorOpen, RotateCcw, Trophy, Menu, Play, Music } from "lucide-react";
-import { FORMATIONS } from "./data/formations";
+import { Menu } from "lucide-react";
+import { FORMATIONS, EASY_FORMATIONS } from "./data/formations";
 import Confetti from "react-confetti";
 import GameBoard from "./components/GameBoard";
+import ResultInsights from "../results/ResultInsights.jsx";
+import ResultOverview from "../results/ResultOverview.jsx";
+import ResultProgress from "../results/ResultProgress.jsx";
+import difficultyConfig from "./DifficultyConfig";
+import gif3 from "@/assets/images/attention-flight-3.gif";
+import TutorialKeyboard from "./components/TutorialKeyboard";
 
 import "@/Games/AttentionFlight/AttentionFlight.css";
 import "@/Games/CardMatch/CardMatch.css";
+import "@/Games/results/Results.css";
 
 const API_BASE = "http://127.0.0.1:5000";
 
 function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60)
-    .toString()
-    .padStart(2, "0");
-
-  const secs = (seconds % 60)
-    .toString()
-    .padStart(2, "0");
+  const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const secs = (seconds % 60).toString().padStart(2, "0");
 
   return `${mins}:${secs}`;
 }
@@ -28,8 +30,8 @@ function AttentionFlight() {
   const [countdown, setCountdown] = useState(3);
   const [timeLeft, setTimeLeft] = useState(60);
   const [score, setScore] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState(0);
+  const wrongAnswersRef = useRef(0);
   const [showFinish, setShowFinish] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [gameMeta, setGameMeta] = useState(null);
@@ -37,13 +39,13 @@ function AttentionFlight() {
   const wrongSoundRef = useRef(null);
   const musicRef = useRef(null);
   const timerRef = useRef(null);
+  const responseTimerRef = useRef(null);
   const countSoundRef = useRef(null);
   const startSoundRef = useRef(null);
   const victorySoundRef = useRef(null);
   const [planes, setPlanes] = useState([]);
   const [centerDirection, setCenterDirection] = useState(null);
   const [currentStreak, setCurrentStreak] = useState(0);
-  const [highestStreak, setHighestStreak] = useState(0);
   const streakRef = useRef(0);
   const [feedbacks, setFeedbacks] = useState([]);
   const [sessionStatus, setSessionStatus] = useState("idle");
@@ -52,18 +54,25 @@ function AttentionFlight() {
   const gameIdRef = useRef(null);
   const timeLimitRef = useRef(60);
   const elapsed = timeLimitRef.current - timeLeft;
+  const [resultData, setResultData] = useState(null);
+  const [resultStep, setResultStep] = useState(0);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  
 
-  const DIRECTIONS = [
-    "up",
-    "down",
-    "left",
-    "right"
-  ];
+  const resultPages = ["overview", "progress", "insights"];
+  const DIRECTIONS = ["up", "down", "left", "right"];
+  const config = difficultyConfig[gameMeta?.recommended_difficulty ?? "medium"];
 
   useEffect(() => {
       const fetchGameMeta = async () => {
         try {
-          const res = await fetch(`${API_BASE}/games?ability=ATTENTION`);
+          const token = localStorage.getItem("token");
+
+          const res = await fetch(`${API_BASE}/games?ability=ATTENTION`, {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          });
           if (!res.ok) return;
           const data = await res.json();
           const attentionFlight = data.games?.find((game) => game.slug === "attention-flight");
@@ -103,13 +112,8 @@ function showFeedback(type, points = 0) {
 }
 
 function generateRound() {
-
-  const formation =
-    FORMATIONS[
-      Math.floor(
-        Math.random() * FORMATIONS.length
-      )
-    ];
+  const availableFormations = config.formations === "simple" ? EASY_FORMATIONS : FORMATIONS;
+  const formation = availableFormations[Math.floor( Math.random() * availableFormations.length)];
 
   const centerX = 450 + Math.random() * 400;
   const centerY = 250 + Math.random() * 150;
@@ -135,10 +139,7 @@ function generateRound() {
 
     const centerPlane = newPlanes.find(p => p.isCenter);
 
-    setCenterDirection(
-      centerPlane.direction
-    );
-
+    setCenterDirection(centerPlane.direction);
     setPlanes(newPlanes);
     console.log("CENTER:", centerPlane.direction);
     console.log(newPlanes);
@@ -152,11 +153,7 @@ function generateRound() {
         const next = prev - 1;
 
         if (next <= 0) {
-          clearInterval(timerRef.current);
-          setGameState("finished");
-          setShowFinish(true);
-          if (victorySoundRef.current) {victorySoundRef.current.currentTime = 0; victorySoundRef.current.play().catch(() => {});}
-          recordSession(score);
+          finishGame();
           return 0;
         }
 
@@ -168,6 +165,7 @@ function generateRound() {
       clearInterval(timerRef.current);
     };
   }, [gameState]);
+  
 
   useEffect(() => {
   if (gameState !== "countdown") return;
@@ -194,21 +192,76 @@ function generateRound() {
     generateRound();
 
     const timer = setTimeout(() => {
+      startTimeRef.current = new Date().toISOString();
       setGameState("playing");
+      startResponseTimer();
     }, 800);
 
     return () => clearTimeout(timer);
   }
 }, [countdown, gameState]);
 
-const recordSession = useCallback(async (finalScore) => {
+function nextRound() {
+  generateRound();
+  startResponseTimer();
+}
+
+function startResponseTimer() {
+  if (responseTimerRef.current) {
+    clearTimeout(responseTimerRef.current);
+    responseTimerRef.current = null;
+  }
+
+  if (config.responseTime === null  || gameState !== "playing") {
+    return;
+  }
+
+  responseTimerRef.current = setTimeout(() => {
+    if (gameState !== "playing") {
+      return;
+    }
+    handleTimeout();
+  }, config.responseTime);
+}
+
+function finishGame() {
+  if (responseTimerRef.current) {
+    clearTimeout(responseTimerRef.current);
+    responseTimerRef.current = null;
+  }
+
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+
+  setGameState("finished");
+  setShowFinish(true);
+
+  if (victorySoundRef.current) {
+    victorySoundRef.current.currentTime = 0;
+    victorySoundRef.current.play().catch(() => {});
+  }
+}
+
+function handleTimeout() {
+  if (gameState !== "playing") {
+    return;
+  }
+  showFeedback("wrong", Math.abs(config.scoreWrong));
+  registerMistake();
+  streakRef.current = 0;
+  setCurrentStreak(0);
+  setScore(prev => Math.max(0, prev + config.scoreWrong));
+  nextRound();
+}
+
+const recordSession = useCallback(async (finalScore, finalElapsed) => {
     if ( sessionSavedRef.current || !gameIdRef.current) { return; }
-    sessionSavedRef.current = true;
-    if (sessionStatus === "saved" || !gameIdRef.current) return;
     const token = localStorage.getItem("token");
     if (!token) return;
-    console.log( "Saving score:", finalScore);
-
+    console.log("Saving session:", {score: finalScore, elapsed: finalElapsed, mistakes: wrongAnswersRef.current});
+    sessionSavedRef.current = true;
     setSessionStatus("saving");
     try {
       const res = await fetch(`${API_BASE}/games/${gameIdRef.current}/sessions`, {
@@ -219,33 +272,43 @@ const recordSession = useCallback(async (finalScore) => {
         },
         body: JSON.stringify({
           elapsed,
-          mistakes: wrongAnswers,
+          mistakes: wrongAnswersRef.current,
           started_at: startTimeRef.current,
           finished_at: new Date().toISOString(),
           estimated_score: finalScore
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
         console.error("Failed to record session", await res.text());
+        sessionSavedRef.current = false;
         setSessionStatus("error");
         return;
       }
+      console.log("Session saved:", data);
+      setResultData(data.result);
+      setResultStep(0);
       setSessionStatus("saved");
     } catch (err) {
       console.error("Failed to record session", err);
+      sessionSavedRef.current = false;
       setSessionStatus("error");
     }
-  }, [wrongAnswers, sessionStatus]);
+  }, []);
 
   const resetGame = () => {
+    sessionSavedRef.current = false;
+    wrongAnswersRef.current = 0;
+    setSessionStatus("idle");
+    setResultData(null);
     setGameState("instructions");
     setCountdown(3);
-    setTimeLeft(60);
+    setTimeLeft(config.time);
     setScore(0);
+    setTutorialStep(0);
     setCurrentStreak(0);
-    setHighestStreak(0);
-    setCorrectAnswers(0);
     setWrongAnswers(0);
     setShowFinish(false);
     setPlanes([]);
@@ -254,11 +317,30 @@ const recordSession = useCallback(async (finalScore) => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    if (responseTimerRef.current){
+      clearTimeout(responseTimerRef.current)
+    }
     if (musicRef.current) {
       musicRef.current.pause();
       musicRef.current.currentTime = 0;
     }
   };
+
+  const tutorial = [
+    {
+      text: "Match the airplane's direction with the correct arrow key.",
+      type: "correct"
+    },
+    {
+      text: "Pressing the wrong key will hurt your score. Stay focused and react quickly!",
+      type: "wrong"
+    },
+    {
+      text: "There will be shown more than one plane. Your job will be to focus only on the middle one.",
+      type: "gif",
+      image: gif3
+    }
+    ];
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -288,6 +370,9 @@ const recordSession = useCallback(async (finalScore) => {
 
       if (!answer) return;
       if (answer === centerDirection) {
+        if (responseTimerRef.current) {
+          clearTimeout(responseTimerRef.current);
+        }
         if (correctSoundRef.current) {
             correctSoundRef.current.currentTime = 0;
             correctSoundRef.current.play().catch(() => {});
@@ -295,10 +380,8 @@ const recordSession = useCallback(async (finalScore) => {
         streakRef.current++;
         const nextStreak = streakRef.current;
         setCurrentStreak(nextStreak);
-        setHighestStreak(prev => Math.max(prev, nextStreak));
-        const streakPoints = Math.min(nextStreak * 10, 50);
+        const streakPoints = Math.min(nextStreak * config.scoreCorrect, config.scoreCorrect*5);
         showFeedback("correct", streakPoints);
-        setCorrectAnswers(prev => prev + 1);
         setScore(prev => {
           const nextScore = Math.min(prev + streakPoints, 2000);
           if (nextScore >= 2000) {
@@ -308,22 +391,23 @@ const recordSession = useCallback(async (finalScore) => {
           return nextScore;
         });
       } else {
+        if (responseTimerRef.current) {
+          clearTimeout(responseTimerRef.current);
+        }
         if (wrongSoundRef.current) {
             wrongSoundRef.current.currentTime = 0;
             wrongSoundRef.current.play().catch(() => {});
           }
-        showFeedback("wrong");
-        setWrongAnswers(
-          prev => prev + 1
-        );
+        showFeedback("wrong", Math.abs(config.scoreWrong));
+        registerMistake();
         streakRef.current = 0;
         setCurrentStreak(0);
         setScore(
           prev =>
-            Math.max(0, prev - 20)
+            Math.max(0, prev - config.scoreWrong)
         );
       }
-      generateRound();
+      nextRound();
     };
     window.addEventListener(
       "keydown",
@@ -339,17 +423,20 @@ const recordSession = useCallback(async (finalScore) => {
   useEffect(() => {
     if (score < 2000) return;
     setScore(2000);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    if (victorySoundRef.current) {
-      victorySoundRef.current.currentTime = 0;
-      victorySoundRef.current.play().catch(() => {});
-    }
-    setShowFinish(true);
-    setGameState("finished");
-    recordSession(2000);
+    finishGame();
   }, [score]);
+
+  function registerMistake() {
+    wrongAnswersRef.current += 1;
+    setWrongAnswers(wrongAnswersRef.current);
+  }
+
+  useEffect(() => {
+    if (gameState !== "finished") return;
+    const finalElapsed = timeLimitRef.current - timeLeft;
+    recordSession(score, finalElapsed);
+
+  }, [gameState]);
 
   useEffect(() => {
     if (!musicRef.current) return;
@@ -391,54 +478,41 @@ const recordSession = useCallback(async (finalScore) => {
       <audio ref={musicRef} src="/assets/audio/chill-music2.mp3" loop/>
       <audio ref={victorySoundRef} src="/assets/audio/victory.mp3"/>
 
-      {/* INSTRUCTIONS */}
-
       {gameState === "instructions" && (
         <div className="overlay">
-          <div className="modal">
-            <h2>Attention Flight</h2>
-            <div className="instruction-subtitle">
-              Focus on the center aircraft and react
-              to its direction as quickly as possible.
-            </div>
-            <div className="instruction-stats">
-              <div className="instruction-stat">
-                <span>60s</span>
-                <small>Time</small>
-              </div>
-              <div className="instruction-stat">
-                <span>2000</span>
-                <small>Max Score</small>
-              </div>
-              <div className="instruction-stat">
-                <span>Attention</span>
-                <small>Skill</small>
-              </div>
-            </div>
-            <div className="instructions-rules">
-              <div className="rule-item">
-                Only the center aircraft matters.
-              </div>
-              <div className="rule-item">
-                Use the arrow keys matching
-                the center aircraft direction.
-              </div>
-              <div className="rule-item">
-                Correct answers increase score,
-                mistakes decrease score.
-              </div>
-            </div>
-            <button className="ghost-btn" onClick={() => {startTimeRef.current = new Date().toISOString();
-               streakRef.current = 0; setCurrentStreak(0); setHighestStreak(0); setCountdown(3); setGameState("countdown");}}>
-              <Play size={20} />
-              Start Game
-            </button>
+        <div className="modal">
+          <h2>How To Play</h2>
+          {tutorial[tutorialStep].type === "gif" ? (
+            <img src={tutorial[tutorialStep].image} className="tutorial-image"/>) : 
+            (<TutorialKeyboard mode={tutorial[tutorialStep].type}/>)}
+          <p className="instruction-subtitle">
+            {tutorial[tutorialStep].text}
+          </p>
 
+          <div className="tutorial-progress">
+            {tutorial.map((_, index) => (<span key={index} className={ index === tutorialStep ? "active-dot" : ""}/>))}
+          </div>
+
+          <div className="tutorial-buttons">
+              {tutorialStep > 0 && (
+                  <button className="back" onClick={() => setTutorialStep(prev => prev - 1)}>
+                    Back
+                  </button>
+              )}
+
+              {tutorialStep < tutorial.length - 1 ? (
+                  <button className="next" onClick={() => setTutorialStep(prev => prev + 1)}>
+                    Next
+                  </button>
+              ) : (
+                  <button className="understand" onClick={() => {setCountdown(3); setGameState("countdown")}}>
+                    I Understand & Start Game
+                  </button>
+              )}
           </div>
         </div>
+      </div>
       )}
-
-      {/* COUNTDOWN */}
 
       {gameState === "countdown" && (
         <div className="countdown-overlay">
@@ -452,24 +526,21 @@ const recordSession = useCallback(async (finalScore) => {
         </div>
       )}
 
-      {/* PAUSE */}
-
       {gameState === "paused" && (
         <div className="overlay">
-          <div className="modal">
+          <div className="pause-modal">
             <h2>Game Paused</h2>
             <div className="pause-actions">
               <button className="ghost-btn" onClick={() => setGameState("playing")}>
-                <Play size={20} />Resume
+                Resume
               </button>
               <button className="ghost-btn" onClick={resetGame}>
-                <RotateCcw size={20} /> Restart Game
+                Restart Game
               </button>
               <button className="ghost-btn" onClick={() => setMusicEnabled(prev => !prev)}>
-                <Music size={20} />{musicEnabled ? "Disable Music" : "Enable Music"}
+                {musicEnabled ? "Disable Music" : "Enable Music"}
               </button>
               <button className="ghost-btn" onClick={() => navigate("/games")}>
-                <DoorOpen size={20} />
                 Exit Game
               </button>
             </div>
@@ -477,27 +548,21 @@ const recordSession = useCallback(async (finalScore) => {
         </div>
       )}
 
-      {/* HEADER */}
-
       <section className="attentionflight-container">
         <header className="attentionflight-header">
-        <button className="menu-btn" onClick={() => setGameState("paused")}>
+        <button className="pause-menu-btn" onClick={() => setGameState("paused")}>
             <Menu size={24} />
           </button>
           <div className="cardmatch-stats">
-            <div className="stat-chip">
+            <div className="stat-chip-card">
               <span className="stat-label">Score</span>
               <span className="stat-value">{score}</span>
             </div>
-            <div className="stat-chip">
-              <span className="stat-label">Correct</span>
-              <span className="stat-value">{correctAnswers}</span>
-            </div>
-            <div className="stat-chip">
+            <div className="stat-chip-card">
               <span className="stat-label">Streak</span>
               <span className="stat-value">{currentStreak}</span>
             </div>
-            <div className="stat-chip">
+            <div className="stat-chip-card">
               <span className="stat-label">Time</span>
               <span className="stat-value">{formatTime(timeLeft)}</span>
             </div>
@@ -509,13 +574,11 @@ const recordSession = useCallback(async (finalScore) => {
             <div key={item.id} className={`feedback-float ${
                 item.type === "correct" ? "feedback-correct" : "feedback-wrong"
               }`}>
-              {item.type === "correct" ? `✓ +${item.points}` : `✕ -20`}
+              {item.type === "correct" ? `✓ +${item.points}` : `✕ -${item.points}`}
             </div>
           ))}
         </div>
       </section>
-
-      {/* FINISH */}
 
       {showFinish && (
         <Confetti
@@ -524,53 +587,46 @@ const recordSession = useCallback(async (finalScore) => {
         />
       )}
 
-      {showFinish && (
-        <div className="finish-backdrop">
-          <div className="finish-modal">
-
-            <div className="finish-icon">
-              <Trophy size={64} />
+      {showFinish && resultData && (
+        <div className="result-overlay">
+          <div className="result-modal">
+            <div className="result-content">
+              {resultStep === 0 && (
+                <ResultOverview result={resultData} />
+              )}
+              {resultStep === 1 && (
+                <ResultProgress result={resultData} />
+              )}
+              {resultStep === 2 && (
+                <ResultInsights result={resultData} />
+              )}
             </div>
-            <h2 className="finish-title">
-              Flight Complete
-            </h2>
-            <div className="finish-score">
-              {score}
+            <div className="result-progress">
+              {resultPages.map((_, index) => (
+                <span key={index} className={index === resultStep ? "active-dot" : ""}/>
+              ))}
             </div>
-            <div className="finish-score-label">
-              POINTS
-            </div>
-            <div className="finish-stats">
-              <div className="finish-stat">
-                <span>{correctAnswers}</span>
-                <small>Correct Answers</small>
-              </div>
-              <div className="finish-stat">
-                <span>{highestStreak}</span>
-                <small>Highest Streak</small>
-              </div>
-              <div className="finish-stat">
-                <span>
-                  {correctAnswers + wrongAnswers > 0
-                    ? Math.round(
-                        (correctAnswers /
-                          (correctAnswers +
-                            wrongAnswers)) *
-                          100
-                      )
-                    : 0}
-                  %
-                </span>
-                <small>Accuracy</small>
-              </div>
-            </div>
-            <div className="finish-actions">
-              <button className="ghost-btn" onClick={() => navigate("/games")}>
-                <DoorOpen /> Exit Game
-              </button>
-              <button className="ghost-btn" onClick={resetGame}>
-                <Play /> Play Again
-              </button>
+            <div className="result-buttons">
+              {resultStep > 0 && (
+                <button className="result-back" onClick={() => setResultStep(prev => prev - 1)}>
+                  Back
+                </button>
+              )}
+              {resultStep < resultPages.length - 1 ? (
+                <button className="result-next" onClick={() => setResultStep(prev => prev + 1)}>
+                  Next
+                </button>
+              ) : (
+                <div className="result-final-actions">
+                  <button className="result-primary" onClick={resetGame}>
+                    Play Again
+                  </button>
+                  
+                  <button className="result-secondary" onClick={() => navigate("/games")}>
+                    Exit Game
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

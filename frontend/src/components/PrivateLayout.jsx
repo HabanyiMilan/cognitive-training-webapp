@@ -1,10 +1,18 @@
 import { useMemo } from "react";
 import { useNavigate, NavLink, Outlet } from "react-router-dom";
-import FloatingLines from "@/components/FloatingLines";
-import {HomeIcon, LogOutIcon, UserRoundIcon, ChartSplineIcon, Gamepad2Icon} from "lucide-react";
+import { LogOutIcon } from "lucide-react";
+import Wallpaper from "../assets/images/Home.png";
+import { motion } from "framer-motion";
 
 function PrivateLayout({ children }) {
   const navigate = useNavigate();
+
+  const navItems = [
+    { label: "Home", path: "/home" },
+    { label: "Games", path: "/games" },
+    { label: "Statistics", path: "/statistics" },
+    { label: "Profile", path: "/profile" },
+  ];
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -15,42 +23,52 @@ function PrivateLayout({ children }) {
 
   const wallpaper = useMemo(() => (
     <div className="wallpaper-bg">
-      <FloatingLines
-        enabledWaves={["top", "middle", "bottom"]}
-        lineCount={5}
-        lineDistance={5}
-        bendRadius={5}
-        bendStrength={-0.5}
-        interactive
-        parallax
-      />
+      <img
+          src={Wallpaper}
+          alt="Wallpaper"
+          className="wallpaper-image"
+        />
     </div>
   ), []);
 
   return (
     <div className="app-container">
-      <aside className="sidebar">
-        <div className="sidebar-top">
-          <img
-            src="/src/assets/icons/Cognitra.png"
-            alt="Logo"
-            className="sidebar-logo"
-            onClick={() => navigate("/home")}
-          />
-          <nav className="sidebar-nav">
-            <NavLink to="/home"><HomeIcon />Home</NavLink>
-            <NavLink to="/games"><Gamepad2Icon />Games</NavLink>
-            <NavLink to="/statistics"><ChartSplineIcon />Statistics</NavLink>
-            <NavLink to="/profile"><UserRoundIcon />Profile</NavLink>
-          </nav>
-        </div>
+      <header className="navbar">
 
-        <div className="sidebar-bottom">
-          <button onClick={handleLogout} className="logout-btn">
-           <LogOutIcon /> Logout
-          </button>
-        </div>
-      </aside>
+        <img
+          src="/src/assets/icons/Cognitra.png"
+          alt="Logo"
+          className="navbar-logo"
+        />
+
+        <nav className="navbar-links">
+          {navItems.map((item) => (
+            <NavLink key={item.path} to={item.path}>
+              {({ isActive }) => (
+                <div className="nav-item">
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="active-pill"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+
+                  <span>{item.label}</span>
+                </div>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        <button onClick={handleLogout} className="logout-btn">
+          <LogOutIcon /> Logout
+        </button>
+      </header>
 
       <main className="app-content">
         {wallpaper}

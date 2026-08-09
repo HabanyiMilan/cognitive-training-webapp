@@ -6,11 +6,6 @@ class AbilityType(enum.Enum):
     ATTENTION = "attention"
     PROBLEM_SOLVING = "problem_solving"
 
-class Difficulty(enum.Enum):
-    EASY = "easy"
-    MEDIUM = "medium"
-    HARD = "hard"
-
 class Game(db.Model):
     __tablename__ = 'games'
     id = db.Column(db.Integer, primary_key=True)
@@ -20,5 +15,4 @@ class Game(db.Model):
     time_limit = db.Column(db.Integer, nullable=False)
     ability_type = db.Column(db.Enum(AbilityType), nullable=False)
     max_score = db.Column(db.Integer, nullable=False)
-    difficulty = db.Column(db.Enum(Difficulty), nullable=False)
     icon_path = db.Column(db.String(200))

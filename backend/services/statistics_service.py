@@ -191,8 +191,11 @@ def get_percentile(user_id: int):
 
     scores = sorted([x[1] for x in all_users if x[1] is not None])
 
-    rank = scores.index(user_avg) if user_avg in scores else 0
-    percentile = int((rank / len(scores)) * 100)
+    if not scores:
+        return 0
+
+    below_or_equal = sum(1 for value in scores if value <= user_avg)
+    percentile = int((below_or_equal / len(scores)) * 100)
 
     return percentile
 
@@ -364,13 +367,54 @@ def generate_AI_analyzis(user_id: int, ability_type: str):
             - recommendations MUST contain 3 items
             - NEVER return empty arrays
             - NEVER return less than 3 items in any list
-            - If data is limited, infer the most reasonable insights based on available information
+            - If the available data is insufficient to support a conclusion, state that the data is insufficient.
+            - Do not invent trends, causes, or relationships that are notsupported by the provided data.
 
             - Each item must be a complete sentence (not just a phrase)
             """
     
     try:
-        response = requests.post(OLLAMA_URL, json={"model": "llama3", "prompt": prompt, "stream": False}, timeout=15)
+        response = requests.post(OLLAMA_URL, json={"model": "llama3", "prompt": prompt, "stream": False, "format": {
+        "type": "object",
+        "properties": {
+            "overview": {
+                "type": "string"
+            },
+            "strengths": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "minItems": 3,
+                "maxItems": 3
+            },
+            "weaknesses": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "minItems": 3,
+                "maxItems": 3
+            },
+            "recommendations": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "minItems": 3,
+                "maxItems": 3
+            }
+        },
+        "required": [
+            "overview",
+            "strengths",
+            "weaknesses",
+            "recommendations"
+        ]
+    },
+    "options": {
+        "temperature": 0
+    }}, timeout=60)
         data = response.json()
         return data.get("response", "No response from AI.")
     except Exception as e:
@@ -388,7 +432,7 @@ def clean_ai_response(text):
 
     return text
 
-def analyze_with_progress(user_id, ability_type, retries=10):
+def analyze_with_progress(user_id, ability_type, retries=3):
     ability_type = ability_type.upper()
     parsed = None
     abilities = get_max_user_statistics(user_id)
@@ -534,7 +578,11 @@ def get_session_result_statistics(user_id: int, session_id: int):
         },
         "mistakes":{
             "current": session.mistakes or 0,
-            "average": int(average_mistakes),
+            "average": (
+                        int(average_mistakes)
+                        if average_mistakes is not None
+                        else None
+                        ),
             "lowest_mistakes": lowest_mistakes,
         },
 

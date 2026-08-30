@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Menu } from "lucide-react";
 import Confetti from "react-confetti";
 import "@/Games/CardMatch/CardMatch.css";
@@ -11,6 +11,7 @@ import difficultyConfig from "./DifficultyConfig";
 import ResultInsights from "../results/ResultInsights.jsx";
 import ResultOverview from "../results/ResultOverview.jsx";
 import ResultProgress from "../results/ResultProgress.jsx";
+import LoadingScreen from "@/components/LoadingScreen.jsx";
 
 const API_BASE = "http://127.0.0.1:5000";
 
@@ -94,6 +95,8 @@ function CardMatch() {
   const [countdown, setCountdown] = useState(3);
   const [resultData, setResultData] = useState(null);
   const [resultStep, setResultStep] = useState(0);
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
 
   const startTimeRef = useRef(new Date().toISOString());
   const finishedRef = useRef(false);
@@ -101,7 +104,9 @@ function CardMatch() {
   const gameIdRef = useRef(null);
   const timeLimitRef = useRef(180);
 
-  const config = difficultyConfig[gameMeta?.recommended_difficulty ?? "medium"];
+  const selectedDifficulty = searchParams.get("difficulty") || gameMeta?.recommended_difficulty?.toLowerCase() || "medium";
+  const config = difficultyConfig[selectedDifficulty] || difficultyConfig.medium;
+  
   const resultPages = ["overview", "progress", "insights"];
 
   useEffect(() => {
@@ -140,6 +145,7 @@ function CardMatch() {
 }, [gameState]);
 
   useEffect(() => {
+    const loadingStart = Date.now();
     const fetchGameMeta = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -161,6 +167,13 @@ function CardMatch() {
         }
       } catch (err) {
         console.error("Failed to fetch game metadata", err);
+      } finally {
+          const elapsed = Date.now() - loadingStart;
+          const remaining = Math.max(0, 3000 - elapsed);
+
+          setTimeout(() => {
+            setIsLoading(false);
+          }, remaining);
       }
     };
     fetchGameMeta();
@@ -438,6 +451,12 @@ useEffect(() => {
     musicRef.current.pause();
   }
 }, [musicEnabled, gameState]);
+
+if (isLoading) {
+      return (
+          <LoadingScreen text="Shuffling cards in progress..." />
+      );
+  }
 
   return (
     <div className="cardmatch-page">

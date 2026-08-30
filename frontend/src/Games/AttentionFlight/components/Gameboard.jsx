@@ -11,7 +11,7 @@ function GameBoard({ planes }) {
           x={plane.x}
           y={plane.y}
           direction={plane.direction}
-          isCenter={plane.isCenter}
+          isTarget={plane.isTarget}
         />
       ))}
     </div>

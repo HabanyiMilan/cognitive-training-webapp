@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Play } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Confetti from "react-confetti";
 import HUD from "./components/HUD";
 import Board from "./components/Board";
-import { boards } from "./data/boards";
 import ResultInsights from "../results/ResultInsights.jsx";
 import ResultOverview from "../results/ResultOverview.jsx";
 import ResultProgress from "../results/ResultProgress.jsx";
+import LoadingScreen from "@/components/LoadingScreen.jsx";
 
 import gif1 from "../PowerFlow/howToPlayImages/power-flow-1.gif";
 import gif2 from "../PowerFlow/howToPlayImages/power-flow-2.gif";
@@ -17,27 +16,15 @@ import "@/Games/results/Results.css";
 import "@/Games/PowerFlow/PowerFlow.css";
 import "@/Games/CardMatch/CardMatch.css";
 import { isSolved, updatePowered, getWinningPath } from "./utils/checkConnections";
-import { calculateOptimalRotations } from "./utils/calculateOptimalRotations";
 
 const API_BASE = "http://127.0.0.1:5000";
 
 function PowerFlow() {
     const navigate = useNavigate();
     const [gameState, setGameState] = useState("instructions");
-    const selectedBoard = boards[Math.floor(Math.random() * boards.length)];
-    const initialBoard = structuredClone(selectedBoard.grid);
-    const musicRef = useRef(null);
-    const victorySoundRef = useRef(null);
-    const countSoundRef = useRef(null);
-    const startSoundRef = useRef(null);
-    const loseSoundRef = useRef(null);
-    const turnSoundRef = useRef(null);
-    const powerSoundRef = useRef(null);
-    const [musicEnabled, setMusicEnabled] = useState(true);
-    updatePowered(initialBoard);
-    const [board, setBoard] = useState(initialBoard);
-    const [optimalRotations, setOptimalRotations] = useState(selectedBoard.optimalRotations);
-    const [timeLeft, setTimeLeft] = useState(180);
+    const [board, setBoard] = useState(null);
+    const [optimalRotations, setOptimalRotations] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(0);
     const [rotations, setRotations] = useState(0);
     const [score, setScore] = useState(0);
     const [countdown, setCountdown] = useState(3);
@@ -49,29 +36,38 @@ function PowerFlow() {
     const [finishReason, setFinishReason] = useState("win");
     const gameIdRef = useRef(null);
     const startTimeRef = useRef(null);
-    const timeLimitRef = useRef(180);
     const [resultStep, setResultStep] = useState(0);
     const [resultData, setResultData] = useState(null);
+    const timeLimitRef = useState(0);
     const [tutorialStep, setTutorialStep] = useState(0);
+    const [searchParams] = useSearchParams();
+    const [isGenerating, setIsGenerating] = useState(true);
+    const [boardWidth, setBoardWidth] = useState(0);
+
+    const [musicEnabled, setMusicEnabled] = useState(true);
+    const musicRef = useRef(null);
+    const victorySoundRef = useRef(null);
+    const countSoundRef = useRef(null);
+    const startSoundRef = useRef(null);
+    const loseSoundRef = useRef(null);
+    const turnSoundRef = useRef(null);
+    const powerSoundRef = useRef(null);
 
     const [mistakes, setMistakes] = useState(0);
     const [sessionStatus, setSessionStatus] = useState("idle");
 
     const resultPages = ["overview", "progress", "insights"];
+
+    const difficulty = searchParams.get("difficulty") || "medium";
     
-    const calculateScore = (time, rotations) => {
+    const calculateScore = (time, rotations, solved) => {
+        if (!solved){
+          return 0
+        }
         const base = 2000;
         const extraRotations = Math.max(0, rotations - optimalRotations);
         return Math.max(0, base - time * 15 - extraRotations * 8);
     };
-
-    useEffect(() => {
-        if (gameState !== "playing") return;
-
-        setScore(
-            calculateScore(elapsed, rotations)
-        );
-    }, [elapsed, rotations, gameState]);
 
       useEffect(() => {
         const fetchGameMeta = async () => {
@@ -86,11 +82,6 @@ function PowerFlow() {
             const data = await res.json();
             const powerFlow = data.games?.find((game) => game.slug === "power-flow");
             if (powerFlow?.id) gameIdRef.current = powerFlow.id;
-            if (powerFlow?.time_limit) {
-              const limit = Number(powerFlow.time_limit) || 180;
-              timeLimitRef.current = limit;
-              setTimeLeft(limit);
-            }
           } catch (err) {
             console.error("Failed to fetch game metadata", err);
           }
@@ -98,7 +89,65 @@ function PowerFlow() {
         fetchGameMeta();
       }, []);
 
-      const recordSession = useCallback(async (finalScore) => {
+      const generateLevel = useCallback(async (difficulty = "medium") => {
+        setIsGenerating(true);
+        const loadingStart = Date.now();
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch(
+                `${API_BASE}/games/powerflow/generate`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        difficulty
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to generate Power Flow level.");
+            }
+
+            const level = await response.json();
+
+            console.log("Generated PowerFlow level:", level);
+
+            const generatedBoard = structuredClone(level.grid);
+
+            updatePowered(generatedBoard);
+
+            setBoard(generatedBoard);
+            setBoardWidth(level.width);
+            setOptimalRotations(level.optimalRotations);
+            setTimeLeft(level.time);
+
+            timeLimitRef.current = level.time;
+
+            return level;
+
+        } catch (error) {
+            console.error("PowerFlow level generation failed:", error);
+            return null;
+        } finally {
+          const elapsed = Date.now() - loadingStart;
+          const remaining = Math.max(0, 3000 - elapsed);
+
+          setTimeout(() => {
+            setIsGenerating(false);
+          }, remaining);
+      }
+    }, []);
+
+    useEffect(() => {
+      generateLevel(difficulty);
+    }, [difficulty, generateLevel]);
+
+    const recordSession = useCallback(async (finalScore) => {
           if (sessionStatus === "saved" || !gameIdRef.current) return;
           const token = localStorage.getItem("token");
           if (!token) return;
@@ -141,7 +190,7 @@ function PowerFlow() {
       if (!isAnimating) return;
 
       if (animationIndex >= animationPath.length - 1) {
-          const finalScore = calculateScore(elapsed, rotations);
+          const finalScore = calculateScore(elapsed, rotations, true);
           recordSession(finalScore);
           setIsAnimating(false);
           setShowFinish(true);
@@ -198,6 +247,7 @@ function PowerFlow() {
           setAnimationPath(path);
           setAnimationIndex(0);
           setIsAnimating(true);
+          setGameState("animating");
           if (powerSoundRef.current) {
             powerSoundRef.current.currentTime = 0;
             powerSoundRef.current.play().catch(() => {});
@@ -207,28 +257,34 @@ function PowerFlow() {
       setBoard(newBoard);
     };
 
-    const resetGame = () => {
-        const selectedBoard = boards[Math.floor(Math.random() * boards.length)];
-        const randomBoard = structuredClone(selectedBoard.grid);
-        updatePowered(randomBoard);
-        setBoard(randomBoard);
-        setOptimalRotations(selectedBoard.optimalRotations);
-        setGameState("instructions");
-        setCountdown(3);
-        setElapsed(0);
-        setTimeLeft(180);
-        setScore(2000);
-        setRotations(0);
+    const resetGame = async () => {
+        
         setShowFinish(false);
         setFinishReason(null);
         setAnimationPath([]);
         setAnimationIndex(-1);
         setIsAnimating(false);
+
+        setGameState("instructions");
+        setElapsed(0);
         setMistakes(0);
+        setScore(0);
+        setRotations(0);
+
+        setCountdown(3);
+        setGameState("countdown");
         setSessionStatus("idle");
         startTimeRef.current = null;
         setTutorialStep(0);
         setResultData(null);
+
+        const level = await generateLevel(difficulty);
+
+        if (!level) {
+            console.error("Could not generate new PowerFlow level.");
+            return;
+        }
+
     };
 
     const tutorial = [
@@ -292,7 +348,7 @@ function PowerFlow() {
                         loseSoundRef.current.currentTime = 0;
                         loseSoundRef.current.play().catch(() => {});
                     }
-                    recordSession( calculateScore(elapsed, rotations));
+                    recordSession(calculateScore(elapsed, rotations, false));
                     setShowFinish(true);
                     setGameState("finished");
                     return 0;
@@ -337,7 +393,11 @@ function PowerFlow() {
       }
     }, [musicEnabled, gameState]);
 
-
+    if (isGenerating || !board) {
+      return (
+          <LoadingScreen text="Setting up Power Flow board..." />
+      );
+  }
   return (
     <div className="powerflow-page">
       <audio ref={musicRef} src="/assets/audio/chill-music.mp3" loop/>
@@ -415,7 +475,7 @@ function PowerFlow() {
       <section className="powerflow-container">
           <HUD score={score} timeLeft={timeLeft} rotations={rotations} onPause={() => setGameState("paused")}/>
           <div className="powerflow-shell">
-            <Board board={board} onRotate={rotateWire} animationPath={animationPath} animationIndex={animationIndex} />
+            <Board board={board} width={boardWidth} onRotate={rotateWire} animationPath={animationPath} animationIndex={animationIndex} />
           </div>
       </section>
       {showFinish && finishReason === "win" && (

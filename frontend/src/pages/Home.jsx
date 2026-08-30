@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Flame } from "lucide-react"
 
 function Home() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
   const [games, setGames] = useState([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,7 @@ function Home() {
         setGames(data.games ?? []);
       } catch (err) {
         console.error(err);
+        setToast({ message: "Failed to get game data", type: "error" });
       }
     };
 
@@ -95,24 +96,25 @@ function Home() {
         }
       } catch (err) {
         console.error("Failed to sync user", err);
+        setToast({ message: "Failed to sync user", type: "error" });
       }
     };
 
     const loginMsg = localStorage.getItem("login_success");
     if (loginMsg) {
-      setToast(loginMsg);
+      setToast({message: loginMsg, type: "success" });
       localStorage.removeItem("login_success");
     }
 
     const saved = localStorage.getItem("assessment_success");
     if (saved) {
-      setToast(saved);
+      setToast({message: saved, type: "success" });
       localStorage.removeItem("assessment_success");
     }
 
     const params = new URLSearchParams(window.location.search);
     if (params.get("assessment") === "fitbit_success") {
-      setToast("Fitbit assessment imported successfully.");
+      setToast({ message: "Fitbit assessment imported successfully.", type: "success" });
       params.delete("assessment");
       const newUrl =
         window.location.pathname +
@@ -138,6 +140,7 @@ function Home() {
       setWeekActivity(data);
     } catch (err) {
       console.error("Failed to fetch week activity", err);
+      setToast({ message: "Failed to get week activity data", type: "error" });
     }
   };
 
@@ -178,7 +181,7 @@ function Home() {
 
   return (
     <div className="home-page">
-      <Toast message={toast} onClose={() => setToast("")} />
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
 
       <section className="hero-wrapper">
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "../styles/Statistics.css";
 import { Brain, Eye, Handshake, ChartColumn, ChartLine, BadgeCheck, Sun, Calendar1, TrendingUp, AlertTriangle, EqualApproximately, Gamepad2, Clock3, Timer, ChevronRight } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, CartesianGrid } from "recharts";
+import Toast from "@/components/Toast.jsx";
 
 const API_BASE = "http://127.0.0.1:5000";
 
@@ -13,7 +14,7 @@ const abilityMeta = {
 
 function Statistics() {
   const [stats, setStats] = useState(null);
-
+  const [toast, setToast] = useState(null);
   const [selectedAbility, setSelectedAbility] = useState(null);
   const [aiData, setAiData] = useState(null);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -30,6 +31,7 @@ function Statistics() {
         setStats(data);
       } catch (err) {
         console.error("Failed to fetch statistics", err);
+        setToast({ message:"Failed to load statistics.", type:"error" });
       }
     };
 
@@ -63,6 +65,7 @@ function Statistics() {
     const data = await res.json();
     if (data.error) {
       console.error(data.error);
+      setToast({ message:"Failed to load statistics.", type:"error" });
       setLoadingAI(false);
       return;
     }
@@ -72,6 +75,7 @@ function Statistics() {
 
   } catch (err) {
     console.error(err);
+    setToast({ message:err, type:"error" });
   }
 
   setLoadingAI(false);
@@ -163,9 +167,18 @@ function Statistics() {
 
         {loadingAI ? (
           <div className="ai-card-loading">
-            <div className ="spinner" />
-            <p className="muted">Analyzing {abilityMeta[selectedAbility]?.label} ability in progress...</p>
-          </div>
+            <div className="ai-loader">
+              <div className="ai-box"></div>
+              <div className="ai-box"></div>
+              <div className="ai-box"></div>
+              <div className="ai-box"></div>
+              <div className="ai-box"></div>
+            </div>
+
+            <p className="muted">
+                AI is currently working on Analyzing your {abilityMeta[selectedAbility]?.label} ability.
+            </p>
+        </div>
         ) : aiData ? (
           <div className="ai-wrapper">
             <div className="ai-card overview">
@@ -269,6 +282,7 @@ function Statistics() {
 
   return (
     <div className="statistics-page">
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
       <header className="stats-hero">
         <div>
           <h1>Statistics</h1>

@@ -15,7 +15,7 @@ function Assessment() {
       return;
     }
     setImporting(true);
-    setToast("Opening Fitbit to import your data…");
+    setToast({ message:"Opening Fitbit to import your data…", type: "invalid" });
     setTimeout(() => {window.location.href = `http://127.0.0.1:5000/auth/fitbit/login?user_id=${user.id}`;}, 120);
     localStorage.setItem("assessment_success", "Assessment saved successfully.");
   };
@@ -80,11 +80,11 @@ function Assessment() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
 
   const loginMsg = localStorage.getItem("login_success");
     if (loginMsg) {
-      setToast(loginMsg);
+      setToast({message:loginMsg, type: "success"});
       localStorage.removeItem("login_success");
     }
 
@@ -134,9 +134,11 @@ function Assessment() {
         navigate("/home");
       } else {
         alert("Something went wrong");
+        setToast({message: "Something went wrong", type: "error" })
       }
     } catch {
       alert("Network error");
+      setToast({message: "Network error", type: "error" })
     }
     setLoading(false);
   };
@@ -145,7 +147,7 @@ function Assessment() {
 
   return (
     <div className="landing-wrapper">
-      <Toast message={toast} onClose={() => setToast("")} />
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
       <div className="landing-card">
         <img
           src="/src/assets/icons/Cognitra.png"

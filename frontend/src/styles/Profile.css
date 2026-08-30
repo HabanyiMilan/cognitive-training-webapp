@@ -20,7 +20,7 @@
   color:white;
   padding:10px 14px;
   border-radius:12px;
-  cursor:pointer;
+  cursor: pointer;
   margin-top:12px;
   margin-left:12px;
   box-shadow:0 10px 25px rgba(59,130,246,0.18);
@@ -95,7 +95,7 @@
   font-size:15px;
   font-weight:600;
   letter-spacing:0.1px;
-  cursor:pointer;
+  cursor: pointer;
   transition:all 0.18s ease;
   box-shadow:0 10px 25px rgba(59,130,246,0.18);
 }
@@ -250,7 +250,7 @@
   font-size:15px;
   font-weight:600;
   letter-spacing:0.1px;
-  cursor:pointer;
+  cursor: pointer;
   margin-right:12px;
   transition:all 0.18s ease;
   box-shadow:0 10px 25px rgba(59,130,246,0.18);
@@ -350,7 +350,7 @@
 .profile-banner__action{
   padding:10px 14px;
   border-radius:12px;
-  cursor:pointer;
+  cursor: pointer;
   border:1px solid rgba(248,113,113,0.6);
   background: rgba(127,29,29,0.25);
   color:white;
@@ -372,7 +372,7 @@
 .delete-btn{
   padding:10px 14px;
   border-radius:12px;
-  cursor:pointer;
+  cursor: pointer;
   margin-top:12px;
   margin-left:12px;
   border:1px solid rgba(248,113,113,0.6);
@@ -432,7 +432,7 @@
   color:white;
   padding:10px 14px;
   border-radius:12px;
-  cursor:pointer;
+  cursor: pointer;
   margin-top:12px;
   margin-left:12px;
   box-shadow:0 10px 25px rgba(59,130,246,0.18);

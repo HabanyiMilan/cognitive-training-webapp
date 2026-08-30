@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { FORMATIONS, EASY_FORMATIONS } from "./data/formations";
 import Confetti from "react-confetti";
@@ -10,6 +10,7 @@ import ResultProgress from "../results/ResultProgress.jsx";
 import difficultyConfig from "./DifficultyConfig";
 import gif3 from "@/assets/images/attention-flight-3.gif";
 import TutorialKeyboard from "./components/TutorialKeyboard";
+import LoadingScreen from "@/components/LoadingScreen.jsx";
 
 import "@/Games/AttentionFlight/AttentionFlight.css";
 import "@/Games/CardMatch/CardMatch.css";
@@ -57,13 +58,16 @@ function AttentionFlight() {
   const [resultData, setResultData] = useState(null);
   const [resultStep, setResultStep] = useState(0);
   const [tutorialStep, setTutorialStep] = useState(0);
-  
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
 
   const resultPages = ["overview", "progress", "insights"];
   const DIRECTIONS = ["up", "down", "left", "right"];
-  const config = difficultyConfig[gameMeta?.recommended_difficulty ?? "medium"];
+  const selectedDifficulty = searchParams.get("difficulty") || gameMeta?.recommended_difficulty?.toLowerCase() || "medium";
+  const config = difficultyConfig[selectedDifficulty] || difficultyConfig.medium;
 
   useEffect(() => {
+      const loadingStart = Date.now();
       const fetchGameMeta = async () => {
         try {
           const token = localStorage.getItem("token");
@@ -87,7 +91,14 @@ function AttentionFlight() {
           }
         } catch (err) {
           console.error("Failed to fetch game metadata", err);
-        }
+        } finally {
+          const elapsed = Date.now() - loadingStart;
+          const remaining = Math.max(0, 3000 - elapsed);
+
+          setTimeout(() => {
+            setIsLoading(false);
+          }, remaining);
+      }
       };
       fetchGameMeta();
     }, []);
@@ -118,8 +129,7 @@ function generateRound() {
   const centerX = 450 + Math.random() * 400;
   const centerY = 250 + Math.random() * 150;
 
-  const newPlanes = formation.map(
-    (position, index) => ({
+  const newPlanes = formation.map((position) => ({
       id: crypto.randomUUID(),
 
       x: centerX + position.x,
@@ -133,15 +143,17 @@ function generateRound() {
           )
         ],
 
-      isCenter: index === 0
+      isTarget: false
     })
     );
 
-    const centerPlane = newPlanes.find(p => p.isCenter);
+    const targetIndex = Math.floor(Math.random()*newPlanes.length);
+    newPlanes[targetIndex].isTarget = true;
+    const targetPlane = newPlanes[targetIndex];
 
-    setCenterDirection(centerPlane.direction);
+    setCenterDirection(targetPlane.direction);
     setPlanes(newPlanes);
-    console.log("CENTER:", centerPlane.direction);
+    console.log("Target:", targetPlane.direction);
     console.log(newPlanes);
   }
 
@@ -252,7 +264,7 @@ function handleTimeout() {
   registerMistake();
   streakRef.current = 0;
   setCurrentStreak(0);
-  setScore(prev => Math.max(0, prev + config.scoreWrong));
+  setScore(prev => Math.max(0, prev - config.scoreWrong));
   nextRound();
 }
 
@@ -336,7 +348,7 @@ const recordSession = useCallback(async (finalScore, finalElapsed) => {
       type: "wrong"
     },
     {
-      text: "There will be shown more than one plane. Your job will be to focus only on the middle one.",
+      text: "Multiple planes will appear. Focus only on the highlighted plane and identify its direction.",
       type: "gif",
       image: gif3
     }
@@ -350,7 +362,12 @@ const recordSession = useCallback(async (finalScore, finalElapsed) => {
       }
 
       if (e.key === "Escape" && gameState === "paused") {
-        setGameState("playing");
+        if (responseTimerRef.current) {
+          clearTimeout(responseTimerRef.current);
+          responseTimerRef.current = null;
+        }
+
+        setGameState("paused");
         return;
       }
 
@@ -421,6 +438,15 @@ const recordSession = useCallback(async (finalScore, finalElapsed) => {
   }, [gameState, centerDirection]);
 
   useEffect(() => {
+  if (gameState !== "playing") {
+    if (responseTimerRef.current) {
+      clearTimeout(responseTimerRef.current);
+      responseTimerRef.current = null;
+    }
+  }
+}, [gameState]);
+
+  useEffect(() => {
     if (score < 2000) return;
     setScore(2000);
     finishGame();
@@ -468,6 +494,12 @@ const recordSession = useCallback(async (finalScore, finalElapsed) => {
     startSoundRef.current.volume = 0.25;
 
 }, []);
+
+if (isLoading) {
+      return (
+          <LoadingScreen game="attention-flight" text="Searching for planes in the system..." />
+      );
+  }
 
   return (
     <div className="attentionflight-page">
@@ -550,7 +582,13 @@ const recordSession = useCallback(async (finalScore, finalElapsed) => {
 
       <section className="attentionflight-container">
         <header className="attentionflight-header">
-        <button className="pause-menu-btn" onClick={() => setGameState("paused")}>
+        <button className="pause-menu-btn" onClick={() => {
+            if (responseTimerRef.current) {
+              clearTimeout(responseTimerRef.current);
+              responseTimerRef.current = null;
+            }
+            setGameState("paused");
+          }}>
             <Menu size={24} />
           </button>
           <div className="cardmatch-stats">

@@ -104,7 +104,7 @@
 
     border-radius:14px;
 
-    cursor:pointer;
+    cursor: pointer;
 
     color:#dbeafe;
 
@@ -194,6 +194,191 @@
 
 }
 
+.game-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.difficulty-wrapper {
+    position: relative;
+    width: 220px;
+}
+
+.difficulty-trigger {
+    height: 58px;
+
+    min-width: 170px;
+
+    padding: 0 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    border: 1px solid #dbeafe;
+
+    border-radius: 16px;
+
+    color: #dbeafe;
+
+    cursor: pointer;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.difficulty-trigger-label {
+    color: #dbeafe;
+
+    font-size: 0.75rem;
+
+    letter-spacing: 0.5px;
+}
+
+.difficulty-trigger-value {
+    color: #3b82f6;
+
+    font-size: 0.95rem;
+
+    font-weight: 700;
+}
+
+.difficulty-arrow {
+    color: #dbeafe;
+
+    font-size: 0.7rem;
+
+    margin-left: auto;
+}
+
+.difficulty-menu {
+    position: absolute;
+
+    right: 0;
+    bottom: calc(100% + 10px);
+
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 6px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    border: 1px solid #dbeafe;
+
+    border-radius: 16px;
+
+    backdrop-filter: blur(18px);
+
+    z-index: 50;
+
+    animation: difficultyMenuIn 0.18s ease-out;
+}
+
+@keyframes difficultyMenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.difficulty-option {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border: none;
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: #cbd5e1;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    font-size: 0.9rem;
+    font-weight: 700;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease;
+}
+
+.difficulty-option:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: white;
+}
+
+.difficulty-option.selected {
+    background: rgba(59, 130, 246, 0.16);
+    color: #60a5fa;
+}
+
+.difficulty-option-main {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    font-size: 0.9rem;
+
+    font-weight: 700;
+}
+
+.difficulty-option.selected {
+    background: rgba(59, 130, 246, 0.16);
+
+    color: #3b82f6;
+}
+
+.difficulty-option.selected:hover {
+    background: rgba(59, 130, 246, 0.22);
+}
+
+.difficulty-recommended {
+    padding: 3px 7px;
+
+    border-radius: 999px;
+
+    color: #facc15;
+
+    background: rgba(250, 204, 21, 0.08);
+
+    border: 1px solid rgba(250, 204, 21, 0.15);
+
+    font-size: 0.62rem;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
 .info-card{
 
     color:#dbeafe;
@@ -220,7 +405,7 @@
     border-radius:16px;
     font-size:18px;
     font-weight:700;
-    cursor:pointer;
+    cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     box-shadow: 0 12px 24px rgba(0,0,0,0.2);
     background:#3b82f6;

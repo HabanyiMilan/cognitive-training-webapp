@@ -25,24 +25,138 @@ body {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.toast {
+.toastbox{
   position: fixed;
-  bottom: 28px;
-  right: 28px;
-  background: rgba(59,130,246,0.3);
-  color: white;
-  padding: 14px 18px;
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(37, 161, 243, 0.877);;
-  z-index: 2000;
-  backdrop-filter: blur(10px);
-  animation: toast-in 180ms ease;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  z-index: 9999;
+}
+.toast {
+  width: 400px;
+  min-height: 80px;
+  padding: 15px 20px;
+  color: #f4f7fb;
+  background: rgba(12, 20, 38, 0.95);
+  font-weight: 600;
+  margin: 15px 0;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45), 0 0 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  transform: translateX(100%);
+  animation: moveleft 0.5s cubic-bezier(.16, 1, .3, 1) forwards;
+}
+.toast i{
+  margin-right: 15px;
+  font-size: 28px;
+  flex-shrink: 0;
 }
 
-@keyframes toast-in {
-  from { transform: translateY(8px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+.toast span {
+  line-height: 1.4;
+}
+
+.toast.success {
+  border-left: 3px solid rgb(0, 229, 153);
+}
+
+.toast.success i {
+  color: rgb(0, 229, 153);
+
+  filter:
+    drop-shadow(
+      0 0 8px
+      rgba(0, 229, 153, 0.5)
+    );
+}
+
+.toast.success::after {
+  background: rgb(0, 229, 153);
+}
+
+.toast.error {
+  border-left: 3px solid rgb(255, 94, 0);
+}
+
+.toast.error i {
+  color: rgb(255, 94, 0);
+
+  filter:
+    drop-shadow(
+      0 0 8px
+      rgba(255, 94, 0, 0.5)
+    );
+}
+
+.toast.error::after {
+  background: rgb(255, 94, 0);
+}
+
+.toast.invalid {
+  border-left: 3px solid #f5c542;
+}
+
+.toast.invalid i {
+  color: #f5c542;
+
+  filter:
+    drop-shadow(
+      0 0 8px
+      rgba(245, 197, 66, 0.4)
+    );
+}
+
+.toast.invalid::after {
+  background: #f5c542;
+}
+
+.toast::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+  height: 3px;
+
+  animation:
+    anim 3s
+    linear
+    forwards;
+}
+
+
+@keyframes anim {
+  100% {
+    width: 0;
+  }
+}
+
+
+@keyframes moveleft {
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 500px) {
+  .toastbox {
+    left: 20px;
+    right: 20px;
+
+    bottom: 20px;
+  }
+
+  .toast {
+    width: 100%;
+  }
 }
 
 .wallpaper-wrapper{

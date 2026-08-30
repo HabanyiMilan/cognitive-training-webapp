@@ -9,14 +9,13 @@ import gamespage from "../assets/images/gamespage.png";
 import statisticspage from "../assets/images/statisticspage.png";
 import assessments from "../assets/images/assessments.png";
 import { Swiper, SwiperSlide } from "swiper/react";
-
-import { Autoplay } from "swiper/modules";
+import { Autoplay, EffectFade } from "swiper/modules";
 
 import "swiper/css";
 
 function LandingPage() {
   const navigate = useNavigate();
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,7 +28,7 @@ function LandingPage() {
     const logout = localStorage.getItem("logout_success");
     if (!logout) return;
 
-    setToast(logout);
+    setToast({ message: logout, type: "success" });
     localStorage.removeItem("logout_success");
   }, []);
 
@@ -50,81 +49,80 @@ function LandingPage() {
       }
     } catch (error) {
       console.error("Login failed:", error);
+      setToast({ message: "Something went wrong while signing in.", type: "error" });
     }
   };
   
   const handleError = () => {
     console.log("Google Login Failed");
+    setToast({ message: "Google sign-in failed. Please try again.", type: "error" });
   };
   
-  return (
-    <div className="landing-wrapper">
-      <Toast message={toast} onClose={() => setToast("")} />
-      <div className="landing-card">
-        <div className="landing-left">
-          <img src="/src/assets/icons/Cognitra.png" alt="Cognitra Logo" className="landing-logo"/>
-
-          <p className="landing-subtitle">
-            Your cognitive playground.
-          </p>
-
-          <div className="login-container">
-            <GoogleLogin
-              onSuccess={handleLoginSuccess}
-              onError={handleError}
-              logo_alignment="center"
-              shape="pill"
-              locale="en"
-            />
+   return (
+    <div className="landing-page">
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)}/>
+      <div className="landing-glow landing-glow-green" />
+      <div className="landing-glow landing-glow-orange" />
+      <main className="landing-hero" id="home">
+        <section className="landing-content">
+          <div className="landing-nav-logo">
+            <img src="/src/assets/icons/Cognitra.png" alt="Cognitra" />
           </div>
+          <h1>
+            Your cognitive
+            <span> playground.</span>
+          </h1>
 
           <p className="landing-description">
             Improve your memory, attention and problem-solving skills
-            through interactive games while tracking your progress.
+            through interactive cognitive games while tracking your
+            progress over time.
           </p>
-        </div>
 
-        <div className="landing-right">
-          <Swiper
-            className="landing-swiper"
-            modules={[Autoplay]}
-            autoplay={{
-                delay: 5000,
-                disableOnInteraction: false,
-            }}
-            loop
-            speed={700}
-        >
+          <div className="landing-actions">
+            <div className="login-container">
+              <GoogleLogin onSuccess={handleLoginSuccess} onError={handleError} logo_alignment="center" shape="pill" locale="en"/>
+            </div>
+          </div>
 
-            <SwiperSlide>
+          <div className="landing-stats">
+            <div>
+              <strong>Different Game Types</strong>
+            </div>
+            <div>
+              <strong>Performance Monitoring</strong>
+            </div>
+            <div>
+              <strong>AI Insights</strong>
+            </div>
+          </div>
+        </section>
 
-                <img src={game1} />
+        <section className="landing-visual">
+          <div className="swiper-wrapper-custom">
+            <div className="swiper-glow" />
+            <Swiper className="landing-swiper" modules={[Autoplay, EffectFade]} effect="fade" fadeEffect={{ crossFade: true }} autoplay={{ delay: 5000, disableOnInteraction: false,}}loop speed={900}>
+              <SwiperSlide>
+                <img src={game1} alt="Cognitra game" />
+              </SwiperSlide>
 
-            </SwiperSlide>
+              <SwiperSlide>
+                <img src={gamespage} alt="Cognitra games"/>
+              </SwiperSlide>
 
-            <SwiperSlide>
+              <SwiperSlide>
+                <img src={statisticspage} alt="Cognitra statistics"/>
+              </SwiperSlide>
 
-                <img src={gamespage} />
-
-            </SwiperSlide>
-
-            <SwiperSlide>
-
-                <img src={statisticspage} />
-
-            </SwiperSlide>
-
-            <SwiperSlide>
-
-                <img src={assessments} />
-
-            </SwiperSlide>
-
-        </Swiper>
-        </div>
-      </div>
+              <SwiperSlide>
+                <img src={assessments} alt="Cognitra assessments"/>
+              </SwiperSlide>
+            </Swiper>
+          </div>
+        </section>
+      </main>
     </div>
   );
-}
+};
 
 export default LandingPage;

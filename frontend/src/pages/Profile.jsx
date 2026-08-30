@@ -10,7 +10,7 @@ function Profile() {
   const navigate = useNavigate();
   const [step, setStep] = useState("view");
   const [profile, setProfile] = useState(null);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
@@ -95,7 +95,7 @@ function Profile() {
         });
       }
     } catch {
-      setToast("Could not load profile. Please try again.");
+      setToast({ message:"Could not load profile. Please try again.", type:"error" });
     }
   };
 
@@ -103,7 +103,7 @@ function Profile() {
     fetchProfile();
     const savedMsg = localStorage.getItem("assessment_success");
     if (savedMsg) {
-      setToast(savedMsg);
+      setToast({ message:savedMsg, type:"success" });
       localStorage.removeItem("assessment_success");
     }
   }, []);
@@ -113,11 +113,11 @@ function Profile() {
   const handleFitbitStart = () => {
   const user = JSON.parse(localStorage.getItem("user"));
     if (!user?.id) {
-      setToast("Please sign in before importing from Fitbit.");
+      setToast({ message:"Please sign in before importing from Fitbit.", type:"error" });
       return;
     }
     setImporting(true);
-    setToast("Opening Fitbit to import your data…");
+    setToast({message:"Opening Fitbit to import your data…", type:"invalid"});
     localStorage.setItem("assessment_success", "Assessment changes saved.");
     setTimeout(() => {
       window.location.href = `http://127.0.0.1:5000/auth/fitbit/login?user_id=${user.id}`;
@@ -159,15 +159,15 @@ function Profile() {
       });
 
       if (response.ok) {
-        setToast("Assessment changes saved.");
+        setToast({message:"Assessment changes saved.", type:"success"});
         await fetchProfile();
         setStep("view");
         setCurrentStep(0);
       } else {
-        setToast("Something went wrong. Please try again.");
+        setToast({message:"Something went wrong. Please try again.", type:"error"});
       }
     } catch {
-      setToast("Network error");
+      setToast({message:"Network error", type:"error"});
     }
     setLoading(false);
   };
@@ -192,13 +192,13 @@ function Profile() {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         localStorage.setItem("logout_success", "Account has been deleted.");
-        setToast("Account has been deleted.");
+        setToast({message:"Account has been deleted.", type:"success"});
         navigate("/");
       } else {
-        setToast("Could not delete Account. Please try again.");
+        setToast({message:"Could not delete Account. Please try again.", type:"error"});
       }
     } catch (err) {
-      setToast("Network error while deleting profile.");
+      setToast({message:"Network error while deleting profile.", type:"error"});
     }
     setDeleting(false);
     setShowDeleteConfirm(false);
@@ -209,7 +209,7 @@ function Profile() {
   if (!profile) {
     return (
       <div className="text-white">
-        <Toast message={toast} onClose={() => setToast("")} />
+        <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
         <div className="text-white">Loading...</div>
       </div>
     );
@@ -257,7 +257,7 @@ function Profile() {
 
   return (
     <div className="text-white">
-      <Toast message={toast} onClose={() => setToast("")} />
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
       {step === "view" && (
         <>
           <div className="profile-banner">

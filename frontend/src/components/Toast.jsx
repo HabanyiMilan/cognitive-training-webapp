@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 
-function Toast({ message, duration = 3000, onClose }) {
+function Toast({ message, type = "success", duration = 3000, onClose }) {
   const [visible, setVisible] = useState(Boolean(message));
 
   useEffect(() => {
-    if (!message) return;
+    if (!message){
+      setVisible(false)
+      return;
+    }
     setVisible(true);
     const timer = setTimeout(() => {
       setVisible(false);
@@ -15,10 +18,20 @@ function Toast({ message, duration = 3000, onClose }) {
 
   if (!message || !visible) return null;
 
+  const icons = {
+    success: "fa-solid fa-circle-check",
+    error: "fa-solid fa-circle-xmark",
+    invalid: "fa-solid fa-hourglass-half",
+  };
+
   return (
-    <div className="toast">
-      {message}
+    <div className="toastbox">
+    <div className={`toast ${type}`}>
+      <i className={icons[type] || icons.success}></i>
+
+      <span>{message}</span>
     </div>
+  </div>
   );
 }
 

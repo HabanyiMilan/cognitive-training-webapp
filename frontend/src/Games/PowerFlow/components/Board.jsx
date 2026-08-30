@@ -1,8 +1,8 @@
 import Cell from "./Cell";
 
-function Board({ board, onRotate, animationPath, animationIndex }) {
+function Board({ board, width, onRotate, animationPath, animationIndex }) {
     return (
-        <div className="powerflow-board">
+        <div className="powerflow-board" style={{"--board-size": width, "--cell-size": `min(96px, calc((100vh - 230px) / ${board.length}))`}}>
             {board.map((row, rowIndex) =>
                 row.map((cell, columnIndex) => {
 

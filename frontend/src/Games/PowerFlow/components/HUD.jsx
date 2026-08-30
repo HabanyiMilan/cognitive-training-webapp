@@ -14,10 +14,6 @@ function HUD ({ score, timeLeft, rotations, onPause }) {
             </button>
             <div className="powerflow-stats">
                 <div className="stat-chip-card">
-                    <span className="stat-label">Score</span>
-                    <span className="stat-value">{score}</span>
-                </div>
-                <div className="stat-chip-card">
                     <span className="stat-label">Time Left</span>
                     <span className="stat-value">{formatTime(timeLeft)}</span>
                 </div>

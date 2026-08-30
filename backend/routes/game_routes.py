@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from services.auth_service import token_required
 from services.game_service import list_games, record_game_session, get_most_popular_game
 from services.statistics_service import get_session_result_statistics
+from services.game_service import generate_powerflow_level
 
 bp = Blueprint("games", __name__, url_prefix="/games")
 
@@ -53,3 +54,19 @@ def record_session_route(current_user, game_id):
             "result": result
         }
     ), 201
+
+@bp.route("/powerflow/generate", methods=["POST"])
+@token_required
+def generate_powerflow(current_user):
+    data = request.json or {}
+    difficulty = data.get("difficulty", "medium")
+
+    try:
+        level = generate_powerflow_level(difficulty)
+        return jsonify(level), 200
+
+    except Exception as e:
+        print("PowerFlow level generation error:", e)
+        return jsonify({
+            "error": "Failed to generate Power Flow level."
+        }), 500

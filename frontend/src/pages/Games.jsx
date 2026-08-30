@@ -9,40 +9,42 @@ import LoadingScreen from "../components/LoadingScreen.jsx";
 function Games() {
   const navigate = useNavigate();
   const [activeTag, setActiveTag] = useState("Memory");
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
   const [games, setGames] = useState([]);
   const [popularGame, setPopularGame] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
-  const handleStart = (game) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState(null);
+  const [difficultyOpen, setDifficultyOpen] = useState(false);
+  const difficultyOptions = [
+    { value: "easy", label: "Easy" },
+    { value: "medium", label: "Medium" },
+    { value: "hard", label: "Hard" }
+  ];
+  const handleStart = (game, difficulty) => {
     console.log("START CLICKED");
+
     if (loading) return;
+
     let path = "";
-    let text = "Loading...";
 
     if (game?.slug === "card-match") {
       path = "/games/card-match";
-      text = "Shuffling Memory Sequences...";
     } 
     else if (game?.slug === "attention-flight") {
       path = "/games/attention-flight";
-      text = "Preparing Attention Flight...";
     } else if (game?.slug === "power-flow") {
       path = "/games/power-flow";
-      text = "Setting up Power Flow...";
     }
 
     if (!path) {
-      setToast(`${game?.name ?? "Game"} launcher coming soon.`);
+      setToast({ message:`${game?.name ?? "Game"} launcher coming soon.`, type:"error" });
       return;
     }
-    setLoading(true);
-    console.log("LOADING TRUE");
-    setLoadingText(text);
-    setTimeout(() => {
-      navigate(path);
-    }, 3000);
+    
+    navigate(`${path}?difficulty=${difficulty}`);
   };
+  
   const abilityMap = {
     "Memory": "MEMORY",
     "Attention": "ATTENTION",
@@ -54,6 +56,7 @@ function Games() {
       const token = localStorage.getItem("token");
       if (!token) {
           console.error("No token found");
+          setToast({ message:"No token found", type:"error" })
           return;
       }
       try {
@@ -67,17 +70,29 @@ function Games() {
         setGames(data?.games ?? []);
       } catch (err) {
         console.error("Failed to load games", err);
+        setToast({ message:"Failed to load games", type:"error" })
         setGames([]);
       }
     };
     fetchGames();
   }, [activeTag, "http://127.0.0.1:5000"]);
 
+  const currentGame = games[0];
+
+  useEffect(() => {
+    if (currentGame?.recommended_difficulty) {
+      setSelectedDifficulty(
+        currentGame.recommended_difficulty.toLowerCase()
+      );
+    }
+  }, [currentGame?.id]);
+
   useEffect(() =>{
     const fetchPopularGame = async () => {
       const token = localStorage.getItem("token")
       if (!token) {
           console.error("No token found");
+          setToast({ message:"No token found", type:"error" })
           return;
       }
       try {
@@ -90,6 +105,7 @@ function Games() {
         setPopularGame(data?.popular_game ?? null);
       } catch (err) {
         console.error("Failed to find most popular game", err);
+        setToast({ message:"Failed to find most popular game", type:"error" })
         setPopularGame(null);
       }
     }; fetchPopularGame();
@@ -101,11 +117,9 @@ function Games() {
     return <LoadingScreen text={loadingText} />
   }
 
-  const currentGame = games[0];
-
   return (
     <div className="games-page">
-      <Toast message={toast} onClose={() => setToast("")} />
+      <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
 
       <div className="games-panel">
 
@@ -175,9 +189,6 @@ function Games() {
                   <div className="game-footer">
                     <div className="game-info">
                         <div className="info-card">
-                            Difficulty: {currentGame.recommended_difficulty}
-                        </div>
-                        <div className="info-card">
                             Last Played: {currentGame.last_played ? new Date(currentGame.last_played).toLocaleDateString() : "Never"}
                         </div>
                         {currentGame.id === popularGame?.id && (
@@ -186,12 +197,53 @@ function Games() {
                           </div>
                         )}
                     </div>
-                    <button
-                        className="start-btn"
-                        onClick={() => handleStart(currentGame)}
-                    >
+                    
+                    <div className="game-actions">
+                      <div className="difficulty-wrapper">
+                          <button className={`difficulty-trigger ${difficultyOpen ? "open" : ""}`} onClick={() => setDifficultyOpen(prev => !prev)}>
+                              <span className="difficulty-trigger-label">
+                                Difficulty:
+                              </span>
+
+                              <span className="difficulty-trigger-value">
+                                {selectedDifficulty ? selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1) : "Medium"}
+                              </span>
+
+                              <span className="difficulty-arrow">
+                                {difficultyOpen ? "▲" : "▼"}
+                              </span>
+                          </button>
+
+                          {difficultyOpen && (
+                              <div className="difficulty-menu">
+                                  {difficultyOptions.map((option) => {
+                                      const isSelected = selectedDifficulty === option.value;
+                                      const isRecommended = currentGame.recommended_difficulty?.toLowerCase() === option.value;
+
+                                      return (
+                                          <button key={option.value} className={`difficulty-option ${ isSelected ? "selected" : ""}`}
+                                              onClick={() => { setSelectedDifficulty(option.value); setDifficultyOpen(false);
+                                              }}
+                                          >
+                                              <span className="difficulty-option-label">
+                                                {option.label}
+                                              </span>
+
+                                              {isRecommended && (
+                                                  <small>
+                                                    Recommended
+                                                  </small>
+                                              )}
+                                          </button>
+                                      );
+                                  })}
+                              </div>
+                          )}
+                      </div>
+                      <button className="start-btn" onClick={() => handleStart(currentGame, selectedDifficulty)}>
                         Start Game
-                    </button>
+                      </button>
+                    </div>
                   </div>
               </section>
           )}

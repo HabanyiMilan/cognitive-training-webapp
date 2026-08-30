@@ -107,7 +107,7 @@
     border-radius:16px;
     font-size:18px;
     font-weight:700;
-    cursor:pointer;
+    cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     color:#fff;
     box-shadow: 0 12px 24px rgba(0,0,0,0.2);
@@ -211,7 +211,7 @@
 
     color:white;
 
-    cursor:pointer;
+    cursor: pointer;
 
     transition:.25s;
 }
@@ -245,7 +245,7 @@
 
     position:relative;
 
-    cursor:pointer;
+    cursor: pointer;
 
     background:rgba(13,18,34,.45);
 

@@ -10,16 +10,15 @@ const PLANE_IMAGES = {
   right: planeRight,
 };
 
-function Plane({ x, y, direction, isCenter }) {
+function Plane({ x, y, direction, isTarget }) {
   return (
     <img
       src={PLANE_IMAGES[direction]}
       alt={direction}
-      className={`plane ${isCenter ? "center-plane" : ""}`}
+      className={`plane ${isTarget ? "target-plane" : ""}`}
       style={{
         left: `${x}px`,
         top: `${y}px`,
-        transform: "translate(-50%, -50%)",
       }}
     />
   );

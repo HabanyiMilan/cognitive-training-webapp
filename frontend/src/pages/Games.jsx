@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "@/components/Toast.jsx";
-import { Brain, Eye, Handshake, Flame } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBrain, faEye, faClipboardCheck, faFire } from "@fortawesome/free-solid-svg-icons";
 import "../styles/Games.css";
 import "../styles/Index.css";
 import LoadingScreen from "../components/LoadingScreen.jsx";
@@ -129,8 +130,6 @@ function Games() {
 
       <div className="games-layout">
 
-          {/* LEFT PANEL */}
-
           <aside className="games-sidebar">
 
               <h3>Categories</h3>
@@ -139,10 +138,10 @@ function Games() {
 
                   const icon =
                       tag === "Memory"
-                          ? <Brain size={20}/>
+                          ? <FontAwesomeIcon icon={faBrain} size="xl" />
                           : tag === "Attention"
-                          ? <Eye size={20}/>
-                          : <Handshake size={20}/>;
+                          ? <FontAwesomeIcon icon={faEye} size="xl" />
+                          : <FontAwesomeIcon icon={faClipboardCheck} size="xl" />;
 
                   return (
                       <button
@@ -160,8 +159,6 @@ function Games() {
               })}
 
           </aside>
-
-          {/* RIGHT PANEL */}
 
           {currentGame && (
 
@@ -193,7 +190,7 @@ function Games() {
                         </div>
                         {currentGame.id === popularGame?.id && (
                           <div className="info-card">
-                              <Flame /> Popular Currently
+                              <FontAwesomeIcon icon={faFire} size="xl" /> Popular Currently
                           </div>
                         )}
                     </div>

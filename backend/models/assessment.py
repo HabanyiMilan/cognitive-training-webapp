@@ -13,9 +13,9 @@ class Assessment(db.Model):
         source = db.Column(db.String(255), nullable=True)
 
         SLEEP_OPTIONS = {
-        0: "Less than 7 hours",
-        1: "7-9 hours",
-        2: "More than 9 hours"
+            0: "Less than 7 hours",
+            1: "7-9 hours",
+            2: "More than 9 hours"
         }
         @property
         def sleep_hours_display(self):

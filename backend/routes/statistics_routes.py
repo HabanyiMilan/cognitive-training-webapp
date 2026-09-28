@@ -23,6 +23,4 @@ def analyze(current_user):
     if not ability:
         return jsonify({"error": "Ability is required"}), 400
 
-    return jsonify(
-        analyze_with_progress(current_user.id, ability)
-    )
+    return jsonify(analyze_with_progress(current_user.id, ability))
